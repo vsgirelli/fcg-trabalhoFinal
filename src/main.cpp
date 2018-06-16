@@ -1585,12 +1585,13 @@ glm::vec4 scale(glm::vec4 v, float s){
 void updateCameraPosition(glm::vec4 &camera_view_vector){
 
     glm::vec4 rotated_vector = crossproduct(camera_view_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+    glm::vec4 front_vector = crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
     if(key_w_pressed){
-        camera_movement += scale(camera_view_vector, MOV_SPEED);
+        camera_movement -= scale(front_vector, MOV_SPEED);
     }
 
     if(key_s_pressed){
-        camera_movement -= scale(camera_view_vector, MOV_SPEED);
+        camera_movement += scale(front_vector, MOV_SPEED);
     }
 
     if(key_a_pressed){

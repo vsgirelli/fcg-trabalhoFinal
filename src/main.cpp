@@ -212,6 +212,7 @@ bool key_w_pressed = false;
 bool key_a_pressed = false;
 bool key_s_pressed = false;
 bool key_d_pressed = false;
+bool key_shift_pressed = false;
 
 glm::vec4 camera_movement = glm::vec4(0.0f, 0.0f, 2.5f, 0.0f);
 
@@ -1239,7 +1240,12 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 
     if (key == GLFW_KEY_D && action == GLFW_PRESS)
     {
-        key_d_pressed =true;
+        key_d_pressed = true;
+    }
+
+    if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS)
+    {
+        key_shift_pressed = true;
     }
 
     // Testar se WASD foram soltas
@@ -1261,6 +1267,11 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_D && action == GLFW_RELEASE)
     {
         key_d_pressed = false;
+    }
+
+    if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE)
+    {
+        key_shift_pressed = false;
     }
 
     // Se o usuário apertar a tecla R, recarregamos os shaders dos arquivos "shader_fragment.glsl" e "shader_vertex.glsl".
@@ -1543,6 +1554,7 @@ void PrintObjModelInfo(ObjModel* model)
   }
 }
 
+#define RUNNING_SPEED 0.125
 #define MOV_SPEED 0.05
 
 glm::vec4 scale(glm::vec4 v, float s){
@@ -1558,20 +1570,23 @@ void updateCameraPosition(glm::vec4 &camera_view_vector){
 
     glm::vec4 rotated_vector = crossproduct(camera_view_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
     glm::vec4 front_vector = crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+
+    float speed = (key_shift_pressed) ? RUNNING_SPEED : MOV_SPEED;
+
     if(key_w_pressed){
-        camera_movement -= scale(front_vector, MOV_SPEED);
+        camera_movement -= scale(front_vector, speed);
     }
 
     if(key_s_pressed){
-        camera_movement += scale(front_vector, MOV_SPEED);
+        camera_movement += scale(front_vector, speed);
     }
 
     if(key_a_pressed){
-        camera_movement -= scale(rotated_vector, MOV_SPEED);
+        camera_movement -= scale(rotated_vector, speed);
     }
 
     if(key_d_pressed){
-        camera_movement += scale(rotated_vector, MOV_SPEED);
+        camera_movement += scale(rotated_vector, speed);
     }
 }
 

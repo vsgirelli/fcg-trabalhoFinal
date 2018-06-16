@@ -482,10 +482,10 @@ int main(int argc, char* argv[])
           DrawVirtualObject("plane");
         }*/
         
-        MakeWallLinedX(0.0f, 0.0f, 0.0f, 5.0f, 5.0f, IS_WALL);          //Make back wall
-        //MakeWallLinedY(5.0f, 0.0f, 5.0f, 5.0f, 50.0f, IS_WALL);     //Make right wall
-        //MakeWallLinedY(5.0f, 0.0f, 5.0f, 5.0f, 50.0f, IS_WALL);    //Make left wall
-
+        MakeWallLinedX(0.0f, 0.0f, 4.0f, 2.0f, 2.0f, IS_WALL);          //Make back wall
+        MakeWallLinedY(5.0f, 0.0f, 5.0f, 2.0f, 1.0f, IS_WALL);     //Make right wall
+        MakeWallLinedY(-5.0f, 0.0f, 5.0f, 2.0f, 1.0f, IS_WALL);    //Make left wall
+        MakeFloor(0.0f, -2.0f, 0.0f, 1.0f, 1.0f, IS_FLOOR);
 
         /*
         // Desenhamos a parede de trás
@@ -1619,7 +1619,7 @@ void updateCameraPosition(glm::vec4 &camera_view_vector){
 WallModel MakeWallLinedX(float posX, float posY, float posZ, float scaleX, float scaleZ, int objType)
 {
     glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
-    float defaultScaleY = 0.0f;
+    float defaultScaleY = 1.0f;
 
     model = Matrix_Translate(posX, posY, posZ);
     model *= Matrix_Rotate_Z(0.0) * Matrix_Rotate_Y(0.0) * Matrix_Rotate_X(PI / 2.0);
@@ -1636,14 +1636,14 @@ WallModel MakeWallLinedX(float posX, float posY, float posZ, float scaleX, float
     return modelToReturn;
 }
 
-WallModel MakeWallLinedY(float posX, float posY, float posZ, float scaleY, float scaleZ, int objType)
+WallModel MakeWallLinedY(float posX, float posY, float posZ, float scaleX, float scaleZ, int objType)
 {
     glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
-    float defaultScaleX = 1.0f;
+    float defaultScaleY = 1.0f;
 
     model = Matrix_Translate(posX, posY, posZ);
-    model *= Matrix_Rotate_Z(PI / 2.0) * Matrix_Rotate_Y(-PI / 2.0);
-    model *= Matrix_Scale(defaultScaleX, scaleY, scaleZ);
+    model *= Matrix_Rotate_Y(PI / 2.0) * Matrix_Rotate_X(PI / 2.0);
+    model *= Matrix_Scale(scaleX, defaultScaleY, scaleZ);
     glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
     glUniform1i(object_id_uniform, PLANE);
     glUniform1i(plane_type_uniform, objType);
@@ -1651,18 +1651,18 @@ WallModel MakeWallLinedY(float posX, float posY, float posZ, float scaleY, float
 
     WallModel modelToReturn;
     modelToReturn.posX = posX; modelToReturn.posY = posY; modelToReturn.posZ = posZ;
-    modelToReturn.scaleX = defaultScaleX; modelToReturn.scaleY = scaleY; modelToReturn.scaleZ = scaleZ;
+    modelToReturn.scaleX = scaleX; modelToReturn.scaleY = defaultScaleY; modelToReturn.scaleZ = scaleZ;
 
     return modelToReturn;
 }
 
-WallModel MakeFloor(float posX, float posY, float posZ, float scaleX, float scaleY, int objType)
+WallModel MakeFloor(float posX, float posY, float posZ, float scaleX, float scaleZ, int objType)
 {
     glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
-    float defaultScaleZ = 0.0f;
+    float defaultScaleY = 1.0f;
 
     model = Matrix_Translate(posX, posY, posZ);
-    model *= Matrix_Scale(scaleX, scaleY,defaultScaleZ);
+    model *= Matrix_Scale(scaleX, defaultScaleY,scaleZ);
     glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
     glUniform1i(object_id_uniform, PLANE);
     glUniform1i(plane_type_uniform, objType);
@@ -1670,7 +1670,7 @@ WallModel MakeFloor(float posX, float posY, float posZ, float scaleX, float scal
 
     WallModel modelToReturn;
     modelToReturn.posX = posX; modelToReturn.posY = posY; modelToReturn.posZ = posZ;
-    modelToReturn.scaleX = scaleX; modelToReturn.scaleY = scaleY; modelToReturn.scaleZ = defaultScaleZ;
+    modelToReturn.scaleX = scaleX; modelToReturn.scaleY = defaultScaleY; modelToReturn.scaleZ = scaleZ;
 
     return modelToReturn;
 }

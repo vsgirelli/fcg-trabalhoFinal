@@ -20,6 +20,7 @@
 #include <cstdlib>
 
 // Headers abaixo são específicos de C++
+#include <iostream>
 #include <map>
 #include <stack>
 #include <string>
@@ -48,6 +49,10 @@
 #include "utils.h"
 #include "matrices.h"
 
+#ifndef PI
+#define PI 3.14159265359
+#endif
+
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 struct ObjModel
@@ -70,7 +75,7 @@ struct ObjModel
 
         if (!ret)
             throw std::runtime_error("Erro ao carregar modelo.");
-        
+
         printf("OK.\n");
     }
 };
@@ -158,11 +163,12 @@ bool g_LeftMouseButtonPressed = false;
 bool g_RightMouseButtonPressed = false; // Análogo para botão direito do mouse
 bool g_MiddleMouseButtonPressed = false; // Análogo para botão do meio do mouse
 
+
 // Variáveis que definem a câmera em coordenadas esféricas, controladas pelo
 // usuário através do mouse (veja função CursorPosCallback()). A posição
 // efetiva da câmera é calculada dentro da função main(), dentro do loop de
 // renderização.
-float g_CameraTheta = 0.0f; // Ângulo no plano ZX em relação ao eixo Z
+float g_CameraTheta = PI; // Ângulo no plano ZX em relação ao eixo Z
 float g_CameraPhi = 0.0f;   // Ângulo em relação ao eixo Y
 float g_CameraDistance = 3.5f; // Distância da câmera para a origem
 
@@ -187,12 +193,28 @@ GLuint program_id = 0;
 GLint model_uniform;
 GLint view_uniform;
 GLint projection_uniform;
-GLint object_id_uniform;
 GLint bbox_min_uniform;
+GLint object_id_uniform;
+GLint plane_type_uniform;
 GLint bbox_max_uniform;
 
 // Número de texturas carregadas pela função LoadTextureImage()
 GLuint g_NumLoadedTextures = 0;
+
+float depth = 25.0;
+
+
+// Atualiza a posição da camera de acordo com as entradas do usuário
+void updateCameraPosition(glm::vec4 &camera_view_vector);
+
+bool pressed = false;
+bool key_w_pressed = false;
+bool key_a_pressed = false;
+bool key_s_pressed = false;
+bool key_d_pressed = false;
+bool key_shift_pressed = false;
+
+glm::vec4 camera_movement = glm::vec4(0.0f, 0.0f, 2.5f, 0.0f);
 
 int main(int argc, char* argv[])
 {
@@ -219,7 +241,8 @@ int main(int argc, char* argv[])
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow* window;
-    window = glfwCreateWindow(800, 600, "INF01047 - 00261596 - Valéria S. Girelli", NULL, NULL);
+    window = glfwCreateWindow(1920, 1080, "INF01047 - TRABALHO FINAL FCG", glfwGetPrimaryMonitor(), NULL);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     if (!window)
     {
         glfwTerminate();
@@ -265,8 +288,9 @@ int main(int argc, char* argv[])
     LoadShadersFromFiles();
 
     // Carregamos duas imagens para serem utilizadas como textura
-    LoadTextureImage("../../data/tc-earth_daymap_surface.jpg");      // TextureImage0
-    LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
+    LoadTextureImage("../../data/large_stone_wall.png");      // TextureImage0
+    LoadTextureImage("../../data/floor_grass.png"); // TextureImage1
+    LoadTextureImage("../../data/sky.png");
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel spheremodel("../../data/sphere.obj");
@@ -294,15 +318,16 @@ int main(int argc, char* argv[])
     glEnable(GL_DEPTH_TEST);
 
     // Habilitamos o Backface Culling. Veja slides 22 à 34 do documento "Aula_13_Clipping_and_Culling.pdf".
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
+    //glEnable(GL_CULL_FACE);
+    //glCullFace(GL_BACK);
+    //glFrontFace(GL_CCW);
 
     // Variáveis auxiliares utilizadas para chamada à função
     // TextRendering_ShowModelViewProjection(), armazenando matrizes 4x4.
     glm::mat4 the_projection;
     glm::mat4 the_model;
     glm::mat4 the_view;
+    glm::vec4 multiplicacao;
 
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -336,10 +361,12 @@ int main(int argc, char* argv[])
 
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
         // Veja slides 165-175 do documento "Aula_08_Sistemas_de_Coordenadas.pdf".
-        glm::vec4 camera_position_c  = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
-        glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
-        glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
-        glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
+        glm::vec4 camera_position_c  = glm::vec4(0.0f,0.0f,0.0f,1.0f) + camera_movement; 		// Ponto "c", centro da câmera
+        glm::vec4 camera_lookat_l    = glm::vec4(x,y,z,1.0f) + camera_movement; 				// Ponto "l", para onde a câmera (look-at) estará sempre olhando
+        glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; 					// Vetor "view", sentido para onde a câmera está virada
+        glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); 							// Vetor "up" fixado para apontar para o "céu" (eito Y global)
+
+        updateCameraPosition(camera_view_vector);
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slide 179 do
@@ -353,7 +380,7 @@ int main(int argc, char* argv[])
         // estão no sentido negativo! Veja slides 191-194 do documento
         // "Aula_09_Projecoes.pdf".
         float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -10.0f; // Posição do "far plane"
+        float farplane  = -100000.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
         {
@@ -389,6 +416,10 @@ int main(int argc, char* argv[])
         #define BUNNY  1
         #define PLANE  2
 
+        #define IS_SKY 2
+        #define IS_FLOOR 1
+        #define IS_WALL 0
+
         // Desenhamos o modelo da esfera
         model = Matrix_Translate(-1.0f,0.0f,0.0f)
               * Matrix_Rotate_Z(0.6f)
@@ -396,20 +427,52 @@ int main(int argc, char* argv[])
               * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, SPHERE);
-        DrawVirtualObject("sphere");
 
         // Desenhamos o modelo do coelho
         model = Matrix_Translate(1.0f,0.0f,0.0f)
               * Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, BUNNY);
-        DrawVirtualObject("bunny");
 
-        // Desenhamos o plano do chão
-        model = Matrix_Translate(0.0f,-1.1f,0.0f);
+
+        for (int i = 0; i < 5; i++) {
+          // Desenhamos as paredes
+          model = Matrix_Translate(2.0f,0.0f,(-depth/2.5)*i);
+          model *= Matrix_Rotate_Z(PI / 2.0) * Matrix_Rotate_Y(-PI / 2.0);
+          model *= Matrix_Scale(depth/5.0,0.0,2.0);
+          glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+          glUniform1i(object_id_uniform, PLANE);
+          glUniform1i(plane_type_uniform, IS_WALL);
+          DrawVirtualObject("plane");
+
+          // Desenhamos as paredes
+          model = Matrix_Translate(-2.0f,0.0f,(-depth/2.5)*i);
+          model *= Matrix_Rotate_X(PI) * Matrix_Rotate_Z(-PI / 2.0) * Matrix_Rotate_Y(-PI / 2.0);
+          model *= Matrix_Scale(depth/5.0,0.0,2.0);
+          glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+          glUniform1i(object_id_uniform, PLANE);
+          glUniform1i(plane_type_uniform, IS_WALL);
+          DrawVirtualObject("plane");
+
+          // Desenhamos o chão
+          model = Matrix_Translate(0.0f,-2.0f,(-depth/2.5)*i);
+          model *= Matrix_Rotate_X(PI) * Matrix_Rotate_Z(-PI) * Matrix_Rotate_Y(-PI / 2.0);
+          model *= Matrix_Scale(depth/5.0,0.0,2.0);
+          glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+          glUniform1i(object_id_uniform, PLANE);
+          glUniform1i(plane_type_uniform, IS_FLOOR);
+          DrawVirtualObject("plane");
+        }
+
+        // Desenhamos a parede de trás
+        model = Matrix_Translate(2.0f,0.0f,4.0f);
+        model *= Matrix_Rotate_Z(0) * Matrix_Rotate_Y(0) * Matrix_Rotate_X(PI / 2.0);
+        model *= Matrix_Scale(4.0f,0.0,2.0);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, PLANE);
+        glUniform1i(plane_type_uniform, IS_WALL);
         DrawVirtualObject("plane");
+
 
         // Pegamos um vértice com coordenadas de modelo (0.5, 0.5, 0.5, 1) e o
         // passamos por todos os sistemas de coordenadas armazenados nas
@@ -577,6 +640,7 @@ void LoadShadersFromFiles()
     view_uniform            = glGetUniformLocation(program_id, "view"); // Variável da matriz "view" em shader_vertex.glsl
     projection_uniform      = glGetUniformLocation(program_id, "projection"); // Variável da matriz "projection" em shader_vertex.glsl
     object_id_uniform       = glGetUniformLocation(program_id, "object_id"); // Variável "object_id" em shader_fragment.glsl
+    plane_type_uniform      = glGetUniformLocation(program_id, "plane_type");
     bbox_min_uniform        = glGetUniformLocation(program_id, "bbox_min");
     bbox_max_uniform        = glGetUniformLocation(program_id, "bbox_max");
 
@@ -951,7 +1015,7 @@ GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id)
         fprintf(stderr, "%s", output.c_str());
     }
 
-    // Os "Shader Objects" podem ser marcados para deleção após serem linkados 
+    // Os "Shader Objects" podem ser marcados para deleção após serem linkados
     glDeleteShader(vertex_shader_id);
     glDeleteShader(fragment_shader_id);
 
@@ -1040,6 +1104,8 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
     }
 }
 
+bool cursorPosCallbackHasExecuted;
+
 // Função callback chamada sempre que o usuário movimentar o cursor do mouse em
 // cima da janela OpenGL.
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
@@ -1050,63 +1116,31 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
     // parâmetros que definem a posição da câmera dentro da cena virtual.
     // Assim, temos que o usuário consegue controlar a câmera.
 
-    if (g_LeftMouseButtonPressed)
-    {
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
-        float dy = ypos - g_LastCursorPosY;
-    
-        // Atualizamos parâmetros da câmera com os deslocamentos
-        g_CameraTheta -= 0.01f*dx;
-        g_CameraPhi   += 0.01f*dy;
-    
-        // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
-        float phimax = 3.141592f/2;
-        float phimin = -phimax;
-    
-        if (g_CameraPhi > phimax)
-            g_CameraPhi = phimax;
-    
-        if (g_CameraPhi < phimin)
-            g_CameraPhi = phimin;
-    
-        // Atualizamos as variáveis globais para armazenar a posição atual do
-        // cursor como sendo a última posição conhecida do cursor.
-        g_LastCursorPosX = xpos;
-        g_LastCursorPosY = ypos;
-    }
+        if(cursorPosCallbackHasExecuted){
+          // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
+          float dx = xpos - g_LastCursorPosX;
+          float dy = ypos - g_LastCursorPosY;
+  
+          // Atualizamos parâmetros da câmera com os deslocamentos
+          g_CameraTheta -= 0.01f*dx;
+          g_CameraPhi   -= 0.01f*dy;
 
-    if (g_RightMouseButtonPressed)
-    {
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
-        float dy = ypos - g_LastCursorPosY;
-    
-        // Atualizamos parâmetros da antebraço com os deslocamentos
-        g_ForearmAngleZ -= 0.01f*dx;
-        g_ForearmAngleX += 0.01f*dy;
-    
-        // Atualizamos as variáveis globais para armazenar a posição atual do
-        // cursor como sendo a última posição conhecida do cursor.
-        g_LastCursorPosX = xpos;
-        g_LastCursorPosY = ypos;
-    }
+          // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
+          float phimax = 3.141592f/2;
+          float phimin = -phimax;
 
-    if (g_MiddleMouseButtonPressed)
-    {
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
-        float dy = ypos - g_LastCursorPosY;
-    
-        // Atualizamos parâmetros da antebraço com os deslocamentos
-        g_TorsoPositionX += 0.01f*dx;
-        g_TorsoPositionY -= 0.01f*dy;
-    
+          if (g_CameraPhi > phimax)
+              g_CameraPhi = phimax;
+  
+          if (g_CameraPhi < phimin)
+              g_CameraPhi = phimin;          
+        }
         // Atualizamos as variáveis globais para armazenar a posição atual do
         // cursor como sendo a última posição conhecida do cursor.
         g_LastCursorPosX = xpos;
         g_LastCursorPosY = ypos;
-    }
+
+        cursorPosCallbackHasExecuted = true;
 }
 
 // Função callback chamada sempre que o usuário movimenta a "rodinha" do mouse.
@@ -1186,6 +1220,58 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_H && action == GLFW_PRESS)
     {
         g_ShowInfoText = !g_ShowInfoText;
+    }
+
+    // Testar se WASD foram pressionadas
+    if (key == GLFW_KEY_W && action == GLFW_PRESS)
+    {
+        key_w_pressed = true;
+    }
+
+    if  (key == GLFW_KEY_A && action == GLFW_PRESS)
+    {
+        key_a_pressed = true;
+    }
+
+     if (key == GLFW_KEY_S && action == GLFW_PRESS)
+    {
+        key_s_pressed = true;
+    }
+
+    if (key == GLFW_KEY_D && action == GLFW_PRESS)
+    {
+        key_d_pressed = true;
+    }
+
+    if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS)
+    {
+        key_shift_pressed = true;
+    }
+
+    // Testar se WASD foram soltas
+    if (key == GLFW_KEY_W && action == GLFW_RELEASE)
+    {
+        key_w_pressed = false;
+    }
+
+    if (key == GLFW_KEY_S && action == GLFW_RELEASE)
+    {
+        key_s_pressed = false;
+    }
+
+    if (key == GLFW_KEY_A && action == GLFW_RELEASE)
+    {
+        key_a_pressed = false;
+    }
+
+    if (key == GLFW_KEY_D && action == GLFW_RELEASE)
+    {
+        key_d_pressed = false;
+    }
+
+    if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE)
+    {
+        key_shift_pressed = false;
     }
 
     // Se o usuário apertar a tecla R, recarregamos os shaders dos arquivos "shader_fragment.glsl" e "shader_vertex.glsl".
@@ -1288,7 +1374,7 @@ void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
     if ( ellapsed_seconds > 1.0f )
     {
         numchars = snprintf(buffer, 20, "%.2f fps", ellapsed_frames / ellapsed_seconds);
-    
+
         old_seconds = seconds;
         ellapsed_frames = 0;
     }
@@ -1466,6 +1552,42 @@ void PrintObjModelInfo(ObjModel* model)
     }
     printf("\n");
   }
+}
+
+#define RUNNING_SPEED 0.125
+#define MOV_SPEED 0.05
+
+glm::vec4 scale(glm::vec4 v, float s){
+    float n = norm(v);
+    float u1 = v.x / n;
+    float u2 = v.y / n;
+    float u3 = v.z / n;
+    float u4 = v.w / n;
+    return glm::vec4(u1*s, u2*s, u3*s, u4*s);
+}
+
+void updateCameraPosition(glm::vec4 &camera_view_vector){
+
+    glm::vec4 rotated_vector = crossproduct(camera_view_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+    glm::vec4 front_vector = crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+
+    float speed = (key_shift_pressed) ? RUNNING_SPEED : MOV_SPEED;
+
+    if(key_w_pressed){
+        camera_movement -= scale(front_vector, speed);
+    }
+
+    if(key_s_pressed){
+        camera_movement += scale(front_vector, speed);
+    }
+
+    if(key_a_pressed){
+        camera_movement -= scale(rotated_vector, speed);
+    }
+
+    if(key_d_pressed){
+        camera_movement += scale(rotated_vector, speed);
+    }
 }
 
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null

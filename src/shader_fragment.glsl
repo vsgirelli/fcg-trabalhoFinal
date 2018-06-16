@@ -23,6 +23,11 @@ uniform mat4 projection;
 #define BUNNY  1
 #define PLANE  2
 uniform int object_id;
+uniform int plane_type;
+
+#define IS_SKY 2
+#define IS_FLOOR 1
+#define IS_WALL 0
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
 uniform vec4 bbox_min;
@@ -125,15 +130,21 @@ void main()
     }
 
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-    vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
-    vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
+    vec3 Kd0;
 
+    if(plane_type == IS_SKY){
+      Kd0 = texture(TextureImage2, vec2(U,V)).rgb;
+    } else if(plane_type == IS_FLOOR){
+      Kd0 = texture(TextureImage1, vec2(U,V)).rgb;
+    } else{
+      Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
+    }
     // Equação de Iluminação
-    float lambert = max(0,dot(n,l));
+    //float lambert = max(0,dot(n,l));
 
-    color = Kd1 * (1 - pow(lambert,0.2)) +  Kd0 * (lambert + 0.01);
+    color = Kd0;
 
     // Cor final com correção gamma, considerando monitor sRGB.
     // Veja https://en.wikipedia.org/w/index.php?title=Gamma_correction&oldid=751281772#Windows.2C_Mac.2C_sRGB_and_TV.2Fvideo_standard_gammas
     color = pow(color, vec3(1.0,1.0,1.0)/2.2);
-} 
+}

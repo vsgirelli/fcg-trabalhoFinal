@@ -482,10 +482,16 @@ int main(int argc, char* argv[])
           DrawVirtualObject("plane");
         }*/
         
-        MakeWallLinedX(0.0f, 0.0f, 4.0f, 2.0f, 2.0f, IS_WALL);          //Make back wall
-        MakeWallLinedY(5.0f, 0.0f, 5.0f, 2.0f, 1.0f, IS_WALL);     //Make right wall
-        MakeWallLinedY(-5.0f, 0.0f, 5.0f, 2.0f, 1.0f, IS_WALL);    //Make left wall
-        MakeFloor(0.0f, -2.0f, 0.0f, 1.0f, 1.0f, IS_FLOOR);
+        float corridorHeight = 2.0f;
+        float corridorWidth = 4.0f;
+        float corridorDepth = 20.0f;
+        float corridorBegining = 4.0f;
+
+        MakeWallLinedX(0.0f, 0.0f, corridorBegining, corridorWidth, corridorHeight, IS_WALL);                               //Make back wall
+        MakeWallLinedX(0.0f, 0.0f, -(2 * corridorDepth) + corridorBegining, corridorWidth, corridorHeight, IS_WALL);                               //Make back wall
+        MakeWallLinedY(corridorWidth, 0.0f, -corridorDepth + corridorBegining, corridorDepth, corridorHeight, IS_WALL);     // Make right wall
+        MakeWallLinedY(-corridorWidth, 0.0f, -corridorDepth + corridorBegining, corridorDepth, corridorHeight, IS_WALL);    // Make left wall
+        MakeFloor(0.0f, -corridorHeight, -corridorDepth + corridorBegining, corridorWidth, corridorDepth, IS_FLOOR);        // Make the floor
 
         /*
         // Desenhamos a parede de trás

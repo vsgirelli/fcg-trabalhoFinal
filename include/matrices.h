@@ -164,7 +164,7 @@ float norm(glm::vec4 v)
     float vz = v.z;
 
     return sqrt( vx*vx + vy*vy + vz*vz);
-/* AQUI o que falta para definir norma Euclidiana */ 
+/* AQUI o que falta para definir norma Euclidiana */
 }
 
 // Matriz R de "rotação de um ponto" em relação à origem do sistema de
@@ -229,7 +229,7 @@ float dotproduct(glm::vec4 u, glm::vec4 v)
     float v3 = v.z;
     float v4 = v.w;
 
-    printf("u4: %f\nv4: %f\n", u4, v4);
+    //printf("u4: %f\nv4: %f\n", u4, v4);
 
     if ( u4 != 0.0f || v4 != 0.0f )
     {
@@ -256,7 +256,7 @@ glm::vec4 subPoints(glm::vec4 u, glm::vec4 v) {
     std::exit(EXIT_FAILURE);
   }
 
-  return glm::vec4(v1-u1, v2-u2, v3-u3, 0.0f); // 0.0f para vetores 
+  return glm::vec4(v1-u1, v2-u2, v3-u3, 0.0f); // 0.0f para vetores
 }
 
 // Matriz de mudança de coordenadas para o sistema de coordenadas da Câmera.
@@ -306,7 +306,7 @@ glm::mat4 Matrix_Orthographic(float l, float r, float b, float t, float n, float
 {
     glm::mat4 M = Matrix(
         // AQUI A MATRIZ M DE PROJEÇÃO ORTOGRÁFICA (3D) UTILIZANDO OS
-        // PARÂMETROS l,r,b,t,n,f 
+        // PARÂMETROS l,r,b,t,n,f
         2/(r-l) , 0.0f    , 0.0f   , -((r+l)/(r-l)),  // LINHA 1
         0.0f    , 2/(t-b) , 0.0f   , -((t+b)/(t-b)),  // LINHA 2
         0.0f    , 0.0f    , 2/(f-n), -((f+n)/(f-n)),  // LINHA 3

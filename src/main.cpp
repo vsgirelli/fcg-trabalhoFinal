@@ -20,6 +20,7 @@
 #include <cstdlib>
 
 // Headers abaixo são específicos de C++
+#include <iostream>
 #include <map>
 #include <string>
 #include <limits>
@@ -373,6 +374,43 @@ int main()
         // efetivamente aplicadas em todos os pontos.
         glUniformMatrix4fv(view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
+
+        for(int i = 1; i <= 1; i++)
+        {
+            glm::mat4 model;
+
+            if(i == 1)
+            {
+              model = Matrix_Identity();
+            }
+            std::cout << "here" << std::endl;
+            // Enviamos a matriz "model" para a placa de vídeo (GPU). Veja o
+            // arquivo "shader_vertex.glsl", onde esta é efetivamente
+            // aplicada em todos os pontos.
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+
+            // Informamos para a placa de vídeo (GPU) que a variável booleana
+            // "render_as_black" deve ser colocada como "false". Veja o arquivo
+            // "shader_vertex.glsl".
+            glUniform1i(render_as_black_uniform, false);
+
+            // Pedimos para a GPU rasterizar os vértices do plano apontados pelo
+            // VAO como triângulos, formando as faces do cubocd Esta
+            // renderização irá executar o Vertex Shader definido no arquivo
+            // "shader_vertex.glsl", e o mesmo irá utilizar as matrizes
+            // "model", "view" e "projection" definidas acima e já enviadas
+            // para a placa de vídeo (GPU).
+            //
+            // Veja a definição de g_VirtualScene["cube_faces"] dentro da
+            // função BuildTriangles(), e veja a documentação da função
+            // glDrawElements() em http://docs.gl/gl3/glDrawElements.
+            glDrawElements(
+                g_VirtualScene["plane"].rendering_mode, // Veja slide 160 do documento "Aula_04_Modelagem_Geometrica_3D.pdf".
+                g_VirtualScene["plane"].num_indices,    //
+                GL_UNSIGNED_INT,
+                (void*)g_VirtualScene["plane"].first_index
+            );
+        }
 
         // Vamos desenhar 3 instâncias (cópias) do cubo
         for (int i = 1; i <= 3; ++i)
@@ -770,7 +808,6 @@ GLuint BuildTriangles()
     // Triangulos que definem o plano, são desenhados com o modo GL_TRIANGLES
         14, 17, 16,
         14, 16, 15,
-
     };
 
     // Criamos um primeiro objeto virtual (SceneObject) que se refere às faces
@@ -802,6 +839,14 @@ GLuint BuildTriangles()
     axes.num_indices    = 6; // Último índice está em indices[65]; total de 6 índices.
     axes.rendering_mode = GL_LINES; // Índices correspondem ao tipo de rasterização GL_LINES.
     g_VirtualScene["axes"] = axes;
+
+    // Criamos um terceiro objeto virtual (SceneObject) que se refere a um plano.
+    SceneObject plane;
+    axes.name           = "Plano";
+    axes.first_index    = (void*)(66*sizeof(GLuint)); // Primeiro índice está em indices[66]
+    axes.num_indices    = 6; // Último índice está em indices[71]; total de 6 índices.
+    axes.rendering_mode = GL_TRIANGLES; // Índices correspondem ao tipo de rasterização GL_TRIANGLES
+    g_VirtualScene["plane"] = plane;
 
     // Criamos um buffer OpenGL para armazenar os índices acima
     GLuint indices_id;

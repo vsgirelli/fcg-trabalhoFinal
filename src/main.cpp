@@ -259,7 +259,7 @@ int main(int argc, char* argv[])
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow* window;
-    window = glfwCreateWindow(1920, 1080, "INF01047 - TRABALHO FINAL FCG", glfwGetPrimaryMonitor(), NULL);
+    window = glfwCreateWindow(800, 600, "INF01047 - TRABALHO FINAL FCG", NULL, NULL);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     if (!window)
     {
@@ -452,8 +452,8 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, BUNNY);
 
-        /*
-        for (int i = 0; i < 5; i++) {
+        
+        /*for (int i = 0; i < 5; i++) {
           //Desenhamos as paredes
           model = Matrix_Translate(2.0f,0.0f,(-depth/2.5)*i);
           model *= Matrix_Rotate_Z(PI / 2.0) * Matrix_Rotate_Y(-PI / 2.0);
@@ -480,8 +480,8 @@ int main(int argc, char* argv[])
           glUniform1i(object_id_uniform, PLANE);
           glUniform1i(plane_type_uniform, IS_FLOOR);
           DrawVirtualObject("plane");
-        }
-        */
+        }*/
+        
         MakeWallLinedX(0.0f, 0.0f, 0.0f, 5.0f, 5.0f, IS_WALL);          //Make back wall
         //MakeWallLinedY(5.0f, 0.0f, 5.0f, 5.0f, 50.0f, IS_WALL);     //Make right wall
         //MakeWallLinedY(5.0f, 0.0f, 5.0f, 5.0f, 50.0f, IS_WALL);    //Make left wall
@@ -1593,7 +1593,7 @@ glm::vec4 scale(glm::vec4 v, float s){
 void updateCameraPosition(glm::vec4 &camera_view_vector){
 
     glm::vec4 rotated_vector = crossproduct(camera_view_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-    glm::vec4 front_vector = crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+    glm::vec4 front_vector = -camera_view_vector;//crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
 
     float speed = (key_shift_pressed) ? RUNNING_SPEED : MOV_SPEED;
 
@@ -1622,8 +1622,8 @@ WallModel MakeWallLinedX(float posX, float posY, float posZ, float scaleX, float
     float defaultScaleY = 0.0f;
 
     model = Matrix_Translate(posX, posY, posZ);
+    model *= Matrix_Rotate_Z(0.0) * Matrix_Rotate_Y(0.0) * Matrix_Rotate_X(PI / 2.0);
     model *= Matrix_Scale(scaleX, defaultScaleY, scaleZ);
-    model *= Matrix_Rotate_Z(0) * Matrix_Rotate_Y(0) * Matrix_Rotate_X(PI / 2.0);
     glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
     glUniform1i(object_id_uniform, PLANE);
     glUniform1i(plane_type_uniform, objType);
@@ -1642,8 +1642,8 @@ WallModel MakeWallLinedY(float posX, float posY, float posZ, float scaleY, float
     float defaultScaleX = 1.0f;
 
     model = Matrix_Translate(posX, posY, posZ);
-    model *= Matrix_Scale(defaultScaleX, scaleY, scaleZ);
     model *= Matrix_Rotate_Z(PI / 2.0) * Matrix_Rotate_Y(-PI / 2.0);
+    model *= Matrix_Scale(defaultScaleX, scaleY, scaleZ);
     glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
     glUniform1i(object_id_uniform, PLANE);
     glUniform1i(plane_type_uniform, objType);

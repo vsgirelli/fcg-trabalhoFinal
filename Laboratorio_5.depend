@@ -24,10 +24,11 @@
 	<inttypes.h>
 	<stdint.h>
 
-1529126824 source:c:\users\leonardo bombardelli\desktop\fcg-trabalhofinal\src\main.cpp
+1529186956 source:c:\users\leonardo bombardelli\desktop\fcg-trabalhofinal\src\main.cpp
 	<cmath>
 	<cstdio>
 	<cstdlib>
+	<iostream>
 	<map>
 	<stack>
 	<string>

@@ -331,8 +331,6 @@ int main()
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
         camera_view_vector = free_camera;
 
-
-
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slide 179 do
         // documento "Aula_08_Sistemas_de_Coordenadas.pdf".
@@ -369,48 +367,12 @@ int main()
             projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
         }
 
+
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
         // efetivamente aplicadas em todos os pontos.
         glUniformMatrix4fv(view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
-
-        for(int i = 1; i <= 1; i++)
-        {
-            glm::mat4 model;
-
-            if(i == 1)
-            {
-              model = Matrix_Identity();
-            }
-            std::cout << "here" << std::endl;
-            // Enviamos a matriz "model" para a placa de vídeo (GPU). Veja o
-            // arquivo "shader_vertex.glsl", onde esta é efetivamente
-            // aplicada em todos os pontos.
-            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-
-            // Informamos para a placa de vídeo (GPU) que a variável booleana
-            // "render_as_black" deve ser colocada como "false". Veja o arquivo
-            // "shader_vertex.glsl".
-            glUniform1i(render_as_black_uniform, false);
-
-            // Pedimos para a GPU rasterizar os vértices do plano apontados pelo
-            // VAO como triângulos, formando as faces do cubocd Esta
-            // renderização irá executar o Vertex Shader definido no arquivo
-            // "shader_vertex.glsl", e o mesmo irá utilizar as matrizes
-            // "model", "view" e "projection" definidas acima e já enviadas
-            // para a placa de vídeo (GPU).
-            //
-            // Veja a definição de g_VirtualScene["cube_faces"] dentro da
-            // função BuildTriangles(), e veja a documentação da função
-            // glDrawElements() em http://docs.gl/gl3/glDrawElements.
-            glDrawElements(
-                g_VirtualScene["plane"].rendering_mode, // Veja slide 160 do documento "Aula_04_Modelagem_Geometrica_3D.pdf".
-                g_VirtualScene["plane"].num_indices,    //
-                GL_UNSIGNED_INT,
-                (void*)g_VirtualScene["plane"].first_index
-            );
-        }
 
         // Vamos desenhar 3 instâncias (cópias) do cubo
         for (int i = 1; i <= 3; ++i)
@@ -642,12 +604,6 @@ GLuint BuildTriangles()
     //    X      Y     Z     W
          0.0f,  0.0f,  0.0f, 1.0f, // posição do vértice 12
          0.0f,  0.0f,  1.0f, 1.0f, // posição do vértice 13
-    // Vértices para desenhar um plano
-    //    X      Y     Z     W
-         -0.5f,  0.5f,  0.0f, 1.0f, // posição do vértice 14
-         0.5f,  0.5f,  0.0f, 1.0f, // posição do vértice 15
-         0.5f,  -0.5f,  0.0f, 1.0f, // posição do vértice 16
-         -0.5f,  0.5f,  1.0f, 1.0f // posição do vértice 17
     };
 
     // Criamos o identificador (ID) de um Vertex Buffer Object (VBO).  Um VBO é
@@ -743,11 +699,6 @@ GLuint BuildTriangles()
     // Cores para desenhar o eixo Z
         0.0f, 0.0f, 1.0f, 1.0f, // cor do vértice 12
         0.0f, 0.0f, 1.0f, 1.0f, // cor do vértice 13
-    // Cores para desenhar os planos
-        0.3f, 0.3f, 0.3f, 1.0f,
-        0.3f, 0.3f, 0.3f, 1.0f,
-        0.3f, 0.3f, 0.3f, 1.0f,
-        0.3f, 0.3f, 0.3f, 1.0f,
     };
     GLuint VBO_color_coefficients_id;
     glGenBuffers(1, &VBO_color_coefficients_id);
@@ -805,9 +756,6 @@ GLuint BuildTriangles()
         8 , 9 , // linha 1
         10, 11, // linha 2
         12, 13,  // linha 3
-    // Triangulos que definem o plano, são desenhados com o modo GL_TRIANGLES
-        14, 17, 16,
-        14, 16, 15,
     };
 
     // Criamos um primeiro objeto virtual (SceneObject) que se refere às faces
@@ -840,13 +788,7 @@ GLuint BuildTriangles()
     axes.rendering_mode = GL_LINES; // Índices correspondem ao tipo de rasterização GL_LINES.
     g_VirtualScene["axes"] = axes;
 
-    // Criamos um terceiro objeto virtual (SceneObject) que se refere a um plano.
-    SceneObject plane;
-    axes.name           = "Plano";
-    axes.first_index    = (void*)(66*sizeof(GLuint)); // Primeiro índice está em indices[66]
-    axes.num_indices    = 6; // Último índice está em indices[71]; total de 6 índices.
-    axes.rendering_mode = GL_TRIANGLES; // Índices correspondem ao tipo de rasterização GL_TRIANGLES
-    g_VirtualScene["plane"] = plane;
+
 
     // Criamos um buffer OpenGL para armazenar os índices acima
     GLuint indices_id;

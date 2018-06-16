@@ -39,6 +39,18 @@ ser feito pelo terminal com o comando:
 
     brew install glfw
 
+--- Alterações no Código ** IMPORTANTE **
+-----------------------------------
+
+Para a criação de contexto no macOS, é necessário que o arquivo src/main.cpp
+seja editado para incluir a linha de código abaixo:
+
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Incluir esta linha
+
+a qual deve ser incluída logo abaixo da linha que contém:
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+
 --- macOS com Makefile
 -----------------------------------
 Abra um terminal, navegue até a pasta "Laboratorio_0X_Codigo_Fonte", e execute

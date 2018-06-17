@@ -1700,12 +1700,10 @@ WallModel MakeFloor(float posX, float posY, float posZ, float scaleX, float scal
 bool CheckCollisionWithWall(glm::vec4 charPos, WallModel wall)
 {
     float wallFirstX = wall.posX - (wall.scaleX);
-    float wallFirstZ = wall.posZ - (wall.scaleZ);
-
     float wallLastX = wall.posX + (wall.scaleX);
-    float wallLastZ = wall.posZ + (wall.scaleZ);
+    float epsilon = 0.2;
 
-    if((charPos.x >= wallFirstX && charPos.x <= wallLastX) && (charPos.z >= wallFirstZ && charPos.z <= wallLastZ))
+    if((charPos.x >= wallFirstX && charPos.x <= wallLastX) && std::abs(wall.posZ - charPos.z) < epsilon)
         return true;
     return false;
 }

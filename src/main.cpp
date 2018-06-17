@@ -265,7 +265,7 @@ int main(int argc, char* argv[])
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow* window;
-    window = glfwCreateWindow(1920, 1080, "INF01047 - TRABALHO FINAL FCG", glfwGetPrimaryMonitor(), NULL);
+    window = glfwCreateWindow(800, 600, "INF01047 - TRABALHO FINAL FCG", NULL, NULL);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     if (!window)
     {
@@ -1554,54 +1554,125 @@ double prevTime = -1.0f;
 void updateCameraPosition(glm::vec4 &camera_view_vector){
 
     double currentTime = glfwGetTime();
-    glm::vec4 newCameraPosition;
+    glm::vec4 newCameraPositionZ, newCameraPositionX, newCameraPosition;
 
     if(prevTime > 0){
       glm::vec4 rotated_vector = crossproduct(camera_view_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-      glm::vec4 front_vector = -camera_view_vector;//crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+      glm::vec4 front_vector = -camera_view_vector;//crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f)); 
+
+      glm::vec4 z_componentfv = scale(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), dotproduct(front_vector, glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)));
+      glm::vec4 x_componentfv = scale(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), dotproduct(front_vector, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)));
+      glm::vec4 z_componentrv = scale(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), dotproduct(rotated_vector, glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)));
+      glm::vec4 x_componentrv = scale(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), dotproduct(rotated_vector, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)));
 
       float speed = (key_shift_pressed) ? RUNNING_SPEED : MOV_SPEED;
       speed *= (currentTime - prevTime);  
 
       if(key_w_pressed){
-          newCameraPosition = camera_movement - scale(front_vector, speed);
+        newCameraPosition = camera_movement - scale(front_vector, speed);
       }
-
+      
       if(key_s_pressed){
-          newCameraPosition = camera_movement + scale(front_vector, speed);
+        newCameraPosition = camera_movement + scale(front_vector, speed);
       }
 
       if(key_a_pressed){
-          newCameraPosition = camera_movement - scale(rotated_vector, speed);
+        newCameraPosition = camera_movement - scale(rotated_vector, speed);
       }
 
       if(key_d_pressed){
-          newCameraPosition = camera_movement + scale(rotated_vector, speed);
+        newCameraPosition = camera_movement + scale(rotated_vector, speed);
       }
 
       bool shouldUpdate = true;
-    
-      // Checks if the new camera position would collide with any wall
-      shouldUpdate &= (!CheckCollisionWithWall(newCameraPosition, sceneWalls[0]));
-      shouldUpdate &= (!CheckCollisionWithWall(newCameraPosition, sceneWalls[1]));
-      shouldUpdate &= (!CheckCollisionWithWallYZ(newCameraPosition, sceneWalls[2]));
-      shouldUpdate &= (!CheckCollisionWithWallYZ(newCameraPosition, sceneWalls[3]));
+
+      shouldUpdate &= (!CheckCollisionWithWall(newCameraPosition, sceneWalls[0]));;
+      shouldUpdate &= (!CheckCollisionWithWall(newCameraPosition, sceneWalls[1]));;
+      shouldUpdate &= (!CheckCollisionWithWallYZ(newCameraPosition, sceneWalls[2]));;
+      shouldUpdate &= (!CheckCollisionWithWallYZ(newCameraPosition, sceneWalls[3]));;
 
       if(shouldUpdate){
         if(key_w_pressed){
-            camera_movement -= scale(front_vector, speed);
+          camera_movement = camera_movement - scale(front_vector, speed);
         }
-
+      
         if(key_s_pressed){
-            camera_movement += scale(front_vector, speed);
+          camera_movement = camera_movement + scale(front_vector, speed);
         }
 
         if(key_a_pressed){
-            camera_movement -= scale(rotated_vector, speed);
+          camera_movement = camera_movement - scale(rotated_vector, speed);
         }
 
         if(key_d_pressed){
-            camera_movement += scale(rotated_vector, speed);
+          camera_movement = camera_movement + scale(rotated_vector, speed);
+        }
+      } else{
+        if(key_w_pressed){
+          newCameraPositionZ = camera_movement - scale(z_componentfv, speed);
+          newCameraPositionX = camera_movement - scale(x_componentfv, speed);
+        }
+
+        if(key_s_pressed){
+          newCameraPositionZ = camera_movement + scale(z_componentfv, speed);
+          newCameraPositionX = camera_movement + scale(x_componentfv, speed);
+        }
+
+        if(key_a_pressed){
+          newCameraPositionZ = camera_movement - scale(z_componentrv, speed);
+          newCameraPositionX = camera_movement - scale(x_componentrv, speed);
+        }
+
+        if(key_d_pressed){
+          newCameraPositionZ = camera_movement + scale(z_componentrv, speed);
+          newCameraPositionX = camera_movement + scale(x_componentrv, speed);
+        }
+
+        shouldUpdate = true;
+
+        // Checks if the new camera position would collide with any wall
+        shouldUpdate &= (!CheckCollisionWithWall(newCameraPositionZ, sceneWalls[0]));
+        shouldUpdate &= (!CheckCollisionWithWall(newCameraPositionZ, sceneWalls[1]));
+
+        if(shouldUpdate){
+          if(key_w_pressed){
+              camera_movement -= scale(z_componentfv, speed);
+          }
+
+          if(key_s_pressed){
+              camera_movement += scale(z_componentfv, speed);
+          }
+
+          if(key_a_pressed){
+              camera_movement -= scale(z_componentrv, speed);
+          }
+
+          if(key_d_pressed){
+              camera_movement += scale(z_componentrv, speed);
+          }
+        }      
+
+        shouldUpdate = true;
+
+        shouldUpdate &= (!CheckCollisionWithWallYZ(newCameraPositionX, sceneWalls[2]));
+        shouldUpdate &= (!CheckCollisionWithWallYZ(newCameraPositionX, sceneWalls[3]));
+
+        if(shouldUpdate){
+          if(key_w_pressed){
+             camera_movement -= scale(x_componentfv, speed);
+          }
+
+          if(key_s_pressed){
+             camera_movement += scale(x_componentfv, speed);
+          }
+
+          if(key_a_pressed){
+             camera_movement -= scale(x_componentrv, speed);
+          }
+
+          if(key_d_pressed){
+             camera_movement += scale(x_componentrv, speed);
+          }
         }
       }
     }

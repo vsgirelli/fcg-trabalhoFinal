@@ -143,6 +143,8 @@ WallModel MakeWallLinedX(float posX, float posY, float posZ, float scaleX, float
 WallModel MakeWallLinedY(float posX, float posY, float posZ, float scaleY, float scaleZ, int objType);  //Wall aligned with Y-Z plane.
 WallModel MakeFloor(float posX, float posY, float posZ, float scaleX, float scaleY, int objType);       //Floor, plane aligned with X-Y plane.
 
+bool CheckCollisionWithWall(glm::vec4 charPos, WallModel wall);
+
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
 struct SceneObject
@@ -452,7 +454,7 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, BUNNY);
 
-        
+
         /*for (int i = 0; i < 5; i++) {
           //Desenhamos as paredes
           model = Matrix_Translate(2.0f,0.0f,(-depth/2.5)*i);
@@ -481,17 +483,22 @@ int main(int argc, char* argv[])
           glUniform1i(plane_type_uniform, IS_FLOOR);
           DrawVirtualObject("plane");
         }*/
-        
+
         float corridorHeight = 2.0f;
         float corridorWidth = 4.0f;
         float corridorDepth = 30.0f;
         float corridorBegining = 4.0f;
+        WallModel testModel;
 
-        MakeWallLinedX(0.0f, 0.0f, corridorBegining, corridorWidth, corridorHeight, IS_WALL);                               //Make back wall
+        testModel = MakeWallLinedX(0.0f, 0.0f, corridorBegining, corridorWidth, corridorHeight, IS_WALL);                               //Make back wall
         MakeWallLinedX(0.0f, 0.0f, -(2 * corridorDepth) + corridorBegining, corridorWidth, corridorHeight, IS_WALL);                               //Make back wall
         MakeWallLinedY(corridorWidth, 0.0f, -corridorDepth + corridorBegining, corridorDepth, corridorHeight, IS_WALL);     // Make right wall
         MakeWallLinedY(-corridorWidth, 0.0f, -corridorDepth + corridorBegining, corridorDepth, corridorHeight, IS_WALL);    // Make left wall
         MakeFloor(0.0f, -corridorHeight, -corridorDepth + corridorBegining, corridorWidth, corridorDepth, IS_FLOOR);        // Make the floor
+
+        if(CheckCollisionWithWall(camera_position_c, testModel)) printf("WTF FUNCIONA\n");
+        printf("Xpos = %f\nZPos = %f\n", camera_position_c.x, camera_position_c.z);
+
 
         /*
         // Desenhamos a parede de trás
@@ -1690,5 +1697,17 @@ WallModel MakeFloor(float posX, float posY, float posZ, float scaleX, float scal
     return modelToReturn;
 }
 
+bool CheckCollisionWithWall(glm::vec4 charPos, WallModel wall)
+{
+    float wallFirstX = wall.posX - (wall.scaleX);
+    float wallFirstZ = wall.posZ - (wall.scaleZ);
+
+    float wallLastX = wall.posX + (wall.scaleX);
+    float wallLastZ = wall.posZ + (wall.scaleZ);
+
+    if((charPos.x >= wallFirstX && charPos.x <= wallLastX) && (charPos.z >= wallFirstZ && charPos.z <= wallLastZ))
+        return true;
+    return false;
+}
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :

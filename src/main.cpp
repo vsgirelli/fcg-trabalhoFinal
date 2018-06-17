@@ -484,7 +484,7 @@ int main(int argc, char* argv[])
         
         float corridorHeight = 2.0f;
         float corridorWidth = 4.0f;
-        float corridorDepth = 20.0f;
+        float corridorDepth = 30.0f;
         float corridorBegining = 4.0f;
 
         MakeWallLinedX(0.0f, 0.0f, corridorBegining, corridorWidth, corridorHeight, IS_WALL);                               //Make back wall
@@ -1584,8 +1584,8 @@ void PrintObjModelInfo(ObjModel* model)
   }
 }
 
-#define RUNNING_SPEED 0.125
-#define MOV_SPEED 0.05
+#define RUNNING_SPEED 12.5
+#define MOV_SPEED 5.0
 
 glm::vec4 scale(glm::vec4 v, float s){
     float n = norm(v);
@@ -1596,28 +1596,37 @@ glm::vec4 scale(glm::vec4 v, float s){
     return glm::vec4(u1*s, u2*s, u3*s, u4*s);
 }
 
+double prevTime = -1.0f;
+
 void updateCameraPosition(glm::vec4 &camera_view_vector){
 
-    glm::vec4 rotated_vector = crossproduct(camera_view_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-    glm::vec4 front_vector = -camera_view_vector;//crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+    double currentTime = glfwGetTime();
 
-    float speed = (key_shift_pressed) ? RUNNING_SPEED : MOV_SPEED;
+    if(prevTime > 0){
+      glm::vec4 rotated_vector = crossproduct(camera_view_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+      glm::vec4 front_vector = -camera_view_vector;//crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
 
-    if(key_w_pressed){
-        camera_movement -= scale(front_vector, speed);
+      float speed = (key_shift_pressed) ? RUNNING_SPEED : MOV_SPEED;
+      speed *= (currentTime - prevTime);  
+
+      if(key_w_pressed){
+          camera_movement -= scale(front_vector, speed);
+      }
+
+      if(key_s_pressed){
+          camera_movement += scale(front_vector, speed);
+      }
+
+      if(key_a_pressed){
+          camera_movement -= scale(rotated_vector, speed);
+      }
+
+      if(key_d_pressed){
+          camera_movement += scale(rotated_vector, speed);
+      }
     }
 
-    if(key_s_pressed){
-        camera_movement += scale(front_vector, speed);
-    }
-
-    if(key_a_pressed){
-        camera_movement -= scale(rotated_vector, speed);
-    }
-
-    if(key_d_pressed){
-        camera_movement += scale(rotated_vector, speed);
-    }
+    prevTime = currentTime;
 }
 
 // MADE: Implementação das funções

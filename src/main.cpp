@@ -144,6 +144,10 @@ WallModel MakeWallLinedY(float posX, float posY, float posZ, float scaleY, float
 WallModel MakeFloor(float posX, float posY, float posZ, float scaleX, float scaleY, int objType);       //Floor, plane aligned with X-Y plane.
 
 bool CheckCollisionWithWall(glm::vec4 charPos, WallModel wall);
+bool CheckCollisionWithWallYZ(glm::vec4 charPos, WallModel wall);
+
+// To test collision with
+WallModel sceneWalls[4];
 
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
@@ -261,8 +265,8 @@ int main(int argc, char* argv[])
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow* window;
-    window = glfwCreateWindow(800, 600, "INF01047 - TRABALHO FINAL FCG", NULL, NULL);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    window = glfwCreateWindow(1920, 1080, "INF01047 - TRABALHO FINAL FCG", glfwGetPrimaryMonitor(), NULL);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     if (!window)
     {
         glfwTerminate();
@@ -386,8 +390,7 @@ int main(int argc, char* argv[])
         glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; 					// Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); 							// Vetor "up" fixado para apontar para o "céu" (eito Y global)
 
-        updateCameraPosition(camera_view_vector);
-
+        
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slide 179 do
         // documento "Aula_08_Sistemas_de_Coordenadas.pdf".
@@ -455,75 +458,18 @@ int main(int argc, char* argv[])
         glUniform1i(object_id_uniform, BUNNY);
 
 
-        /*for (int i = 0; i < 5; i++) {
-          //Desenhamos as paredes
-          model = Matrix_Translate(2.0f,0.0f,(-depth/2.5)*i);
-          model *= Matrix_Rotate_Z(PI / 2.0) * Matrix_Rotate_Y(-PI / 2.0);
-          model *= Matrix_Scale(depth/5.0,0.0,2.0);
-          glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-          glUniform1i(object_id_uniform, PLANE);
-          glUniform1i(plane_type_uniform, IS_WALL);
-          DrawVirtualObject("plane");
-
-          // Desenhamos as paredes
-          model = Matrix_Translate(-2.0f,0.0f,(-depth/2.5)*i);
-          model *= Matrix_Rotate_X(PI) * Matrix_Rotate_Z(-PI / 2.0) * Matrix_Rotate_Y(-PI / 2.0);
-          model *= Matrix_Scale(depth/5.0,0.0,2.0);
-          glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-          glUniform1i(object_id_uniform, PLANE);
-          glUniform1i(plane_type_uniform, IS_WALL);
-          DrawVirtualObject("plane");
-
-          // Desenhamos o chão
-          model = Matrix_Translate(0.0f,-2.0f,(-depth/2.5)*i);
-          model *= Matrix_Rotate_X(PI) * Matrix_Rotate_Z(-PI) * Matrix_Rotate_Y(-PI / 2.0);
-          model *= Matrix_Scale(depth/5.0,0.0,2.0);
-          glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-          glUniform1i(object_id_uniform, PLANE);
-          glUniform1i(plane_type_uniform, IS_FLOOR);
-          DrawVirtualObject("plane");
-        }*/
-
         float corridorHeight = 2.0f;
         float corridorWidth = 4.0f;
         float corridorDepth = 30.0f;
         float corridorBegining = 4.0f;
-        WallModel testModel;
-
-        testModel = MakeWallLinedX(0.0f, 0.0f, corridorBegining, corridorWidth, corridorHeight, IS_WALL);                               //Make back wall
-        MakeWallLinedX(0.0f, 0.0f, -(2 * corridorDepth) + corridorBegining, corridorWidth, corridorHeight, IS_WALL);                               //Make back wall
-        MakeWallLinedY(corridorWidth, 0.0f, -corridorDepth + corridorBegining, corridorDepth, corridorHeight, IS_WALL);     // Make right wall
-        MakeWallLinedY(-corridorWidth, 0.0f, -corridorDepth + corridorBegining, corridorDepth, corridorHeight, IS_WALL);    // Make left wall
+        
+        sceneWalls[0] = MakeWallLinedX(0.0f, 0.0f, corridorBegining, corridorWidth, corridorHeight, IS_WALL);                               //Make back wall
+        sceneWalls[1] = MakeWallLinedX(0.0f, 0.0f, -(2 * corridorDepth) + corridorBegining, corridorWidth, corridorHeight, IS_WALL);                               //Make front wall
+        sceneWalls[2] = MakeWallLinedY(corridorWidth, 0.0f, -corridorDepth + corridorBegining, corridorDepth, corridorHeight, IS_WALL);     // Make right wall
+        sceneWalls[3] = MakeWallLinedY(-corridorWidth, 0.0f, -corridorDepth + corridorBegining, corridorDepth, corridorHeight, IS_WALL);    // Make left wall
         MakeFloor(0.0f, -corridorHeight, -corridorDepth + corridorBegining, corridorWidth, corridorDepth, IS_FLOOR);        // Make the floor
 
-        if(CheckCollisionWithWall(camera_position_c, testModel)) printf("WTF FUNCIONA\n");
-        printf("Xpos = %f\nZPos = %f\n", camera_position_c.x, camera_position_c.z);
-
-
-        /*
-        // Desenhamos a parede de trás
-        model = Matrix_Translate(2.0f,0.0f,4.0f);
-        model *= Matrix_Rotate_Z(0) * Matrix_Rotate_Y(0) * Matrix_Rotate_X(PI / 2.0);
-        model *= Matrix_Scale(4.0f,0.0,2.0);
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, PLANE);
-        glUniform1i(plane_type_uniform, IS_WALL);
-        DrawVirtualObject("plane");
-        */
-
-        // Pegamos um vértice com coordenadas de modelo (0.5, 0.5, 0.5, 1) e o
-        // passamos por todos os sistemas de coordenadas armazenados nas
-        // matrizes the_model, the_view, e the_projection; e escrevemos na tela
-        // as matrizes e pontos resultantes dessas transformações.
-        //glm::vec4 p_model(0.5f, 0.5f, 0.5f, 1.0f);
-        //TextRendering_ShowModelViewProjection(window, projection, view, model, p_model);
-
-        // Imprimimos na tela os ângulos de Euler que controlam a rotação do
-        // terceiro cubo.
-        TextRendering_ShowEulerAngles(window);
-
-        // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
-        TextRendering_ShowProjection(window);
+        updateCameraPosition(camera_view_vector);
 
         // Imprimimos na tela informação sobre o número de quadros renderizados
         // por segundo (frames per second).
@@ -1608,6 +1554,7 @@ double prevTime = -1.0f;
 void updateCameraPosition(glm::vec4 &camera_view_vector){
 
     double currentTime = glfwGetTime();
+    glm::vec4 newCameraPosition;
 
     if(prevTime > 0){
       glm::vec4 rotated_vector = crossproduct(camera_view_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
@@ -1617,19 +1564,45 @@ void updateCameraPosition(glm::vec4 &camera_view_vector){
       speed *= (currentTime - prevTime);  
 
       if(key_w_pressed){
-          camera_movement -= scale(front_vector, speed);
+          newCameraPosition = camera_movement - scale(front_vector, speed);
       }
 
       if(key_s_pressed){
-          camera_movement += scale(front_vector, speed);
+          newCameraPosition = camera_movement + scale(front_vector, speed);
       }
 
       if(key_a_pressed){
-          camera_movement -= scale(rotated_vector, speed);
+          newCameraPosition = camera_movement - scale(rotated_vector, speed);
       }
 
       if(key_d_pressed){
-          camera_movement += scale(rotated_vector, speed);
+          newCameraPosition = camera_movement + scale(rotated_vector, speed);
+      }
+
+      bool shouldUpdate = true;
+    
+      // Checks if the new camera position would collide with any wall
+      shouldUpdate &= (!CheckCollisionWithWall(newCameraPosition, sceneWalls[0]));
+      shouldUpdate &= (!CheckCollisionWithWall(newCameraPosition, sceneWalls[1]));
+      shouldUpdate &= (!CheckCollisionWithWallYZ(newCameraPosition, sceneWalls[2]));
+      shouldUpdate &= (!CheckCollisionWithWallYZ(newCameraPosition, sceneWalls[3]));
+
+      if(shouldUpdate){
+        if(key_w_pressed){
+            camera_movement -= scale(front_vector, speed);
+        }
+
+        if(key_s_pressed){
+            camera_movement += scale(front_vector, speed);
+        }
+
+        if(key_a_pressed){
+            camera_movement -= scale(rotated_vector, speed);
+        }
+
+        if(key_d_pressed){
+            camera_movement += scale(rotated_vector, speed);
+        }
       }
     }
 
@@ -1699,11 +1672,22 @@ WallModel MakeFloor(float posX, float posY, float posZ, float scaleX, float scal
 
 bool CheckCollisionWithWall(glm::vec4 charPos, WallModel wall)
 {
-    float wallFirstX = wall.posX - (wall.scaleX);
-    float wallLastX = wall.posX + (wall.scaleX);
+    float wallFirstX = wall.posX - wall.scaleX;
+    float wallLastX = wall.posX + wall.scaleX;
     float epsilon = 0.2;
 
     if((charPos.x >= wallFirstX && charPos.x <= wallLastX) && std::abs(wall.posZ - charPos.z) < epsilon)
+        return true;
+    return false;
+}
+
+bool CheckCollisionWithWallYZ(glm::vec4 charPos, WallModel wall)
+{
+    float wallFirstZ = wall.posZ - wall.scaleX;
+    float wallLastZ = wall.posZ + wall.scaleX;
+    float epsilon = 0.5;
+
+    if((charPos.z >= wallFirstZ && charPos.z <= wallLastZ) && std::abs(wall.posX - charPos.x) < epsilon)
         return true;
     return false;
 }

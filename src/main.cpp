@@ -407,7 +407,7 @@ int main(int argc, char* argv[])
         glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; 					// Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); 							// Vetor "up" fixado para apontar para o "céu" (eito Y global)
 
-        
+
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slide 179 do
         // documento "Aula_08_Sistemas_de_Coordenadas.pdf".
@@ -444,7 +444,7 @@ int main(int argc, char* argv[])
             projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
         }
 
-        
+
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
         // efetivamente aplicadas em todos os pontos.
@@ -460,11 +460,11 @@ int main(int argc, char* argv[])
         #define IS_FLOOR 1
         #define IS_WALL 0
 
-        float corridorHeight = 2.0f;
-        float corridorWidth = 4.0f;
-        float corridorDepth = 40.0f;
-        float corridorBegining = 4.0f;
-        
+        #define corridorHeight 2.0f
+        #define corridorWidth 4.0f
+        #define corridorDepth 40.0f
+        #define corridorBegining 4.0f
+
         sceneWalls[0] = MakeWallLinedX(0.0f, 0.0f, corridorBegining, corridorWidth, corridorHeight, IS_WALL);                               //Make back wall
         sceneWalls[1] = MakeWallLinedX(0.0f, 0.0f, -(2 * corridorDepth) + corridorBegining, corridorWidth, corridorHeight, IS_WALL);                               //Make front wall
         sceneWalls[2] = MakeWallLinedY(corridorWidth, 0.0f, -corridorDepth + corridorBegining, corridorDepth, corridorHeight, IS_WALL);     // Make right wall
@@ -476,7 +476,7 @@ int main(int argc, char* argv[])
         if(sceneCubes.empty()){
           float newX = ((rand() % 3) - 1) * 2;
           WallModel newCube = MakeCube(newX, 0.0f, -(2 * corridorDepth) + 10);
-          sceneCubes.push_back(newCube);  
+          sceneCubes.push_back(newCube);
         }
 
         if(sceneCubes.at(sceneCubes.size()-1).posZ > -(2 * corridorDepth) + 20){
@@ -490,7 +490,11 @@ int main(int argc, char* argv[])
 
         for(std::vector<WallModel>::iterator it = sceneCubes.begin(); it != sceneCubes.end(); it++){
           UpdateCube(*it, elapsedTime);
-          DrawCube(*it);
+          if(it->posZ <= corridorBegining)
+            DrawCube(*it);
+          else {
+            sceneCubes.erase(it);
+          }
         }
 
         prevCubeTime = curTime;
@@ -1583,7 +1587,7 @@ void updateCameraPosition(glm::vec4 &camera_view_vector){
 
     if(prevTime > 0){
       glm::vec4 rotated_vector = crossproduct(camera_view_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-      glm::vec4 front_vector = -camera_view_vector;//crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f)); 
+      glm::vec4 front_vector = -camera_view_vector;//crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
 
       glm::vec4 z_componentfv = scale(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), dotproduct(front_vector, glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)));
       glm::vec4 x_componentfv = scale(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), dotproduct(front_vector, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)));
@@ -1591,12 +1595,12 @@ void updateCameraPosition(glm::vec4 &camera_view_vector){
       glm::vec4 x_componentrv = scale(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), dotproduct(rotated_vector, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)));
 
       float speed = (key_shift_pressed) ? RUNNING_SPEED : MOV_SPEED;
-      speed *= (currentTime - prevTime);  
+      speed *= (currentTime - prevTime);
 
       if(key_w_pressed){
         newCameraPosition = camera_movement - scale(front_vector, speed);
       }
-      
+
       if(key_s_pressed){
         newCameraPosition = camera_movement + scale(front_vector, speed);
       }
@@ -1620,7 +1624,7 @@ void updateCameraPosition(glm::vec4 &camera_view_vector){
         if(key_w_pressed){
           camera_movement = camera_movement - scale(front_vector, speed);
         }
-      
+
         if(key_s_pressed){
           camera_movement = camera_movement + scale(front_vector, speed);
         }
@@ -1677,7 +1681,7 @@ void updateCameraPosition(glm::vec4 &camera_view_vector){
           if(key_d_pressed){
               camera_movement += scale(z_componentrv, speed);
           }
-        }      
+        }
 
         shouldUpdate = true;
 
@@ -1780,9 +1784,9 @@ WallModel MakeCube(float posX, float posY, float posZ)
     return model;
 }
 
-#define CUBE_RUNNING_SPEED 15.0
-#define CUBE_MOVING_SPEED 7.5
-#define CUBE_STILL_SPEED 4.0
+#define CUBE_RUNNING_SPEED 35.0
+#define CUBE_MOVING_SPEED 20.0
+#define CUBE_STILL_SPEED 5.0
 
 
 void UpdateCube(WallModel &cube, float timeElapsed)
@@ -1796,7 +1800,7 @@ void UpdateCube(WallModel &cube, float timeElapsed)
       } else if(player_moving){
         cube.posZ += CUBE_MOVING_SPEED * timeElapsed;
       } else{
-        cube.posZ += CUBE_STILL_SPEED * timeElapsed;  
+        cube.posZ += CUBE_STILL_SPEED * timeElapsed;
       }
 
       std::cout << cube.posZ << std::endl;
@@ -1815,7 +1819,7 @@ bool CheckCollisionWithWall(glm::vec4 charPos, WallModel wall)
 {
     float wallFirstX = wall.posX - wall.scaleX;
     float wallLastX = wall.posX + wall.scaleX;
-    float epsilon = 0.2;
+    float epsilon = 0.5;
 
     if((charPos.x >= wallFirstX && charPos.x <= wallLastX) && std::abs(wall.posZ - charPos.z) < epsilon)
         return true;

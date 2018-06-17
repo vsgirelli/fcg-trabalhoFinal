@@ -24,8 +24,9 @@
 	<inttypes.h>
 	<stdint.h>
 
-1529186956 source:c:\users\leonardo bombardelli\desktop\fcg-trabalhofinal\src\main.cpp
+1529271369 source:c:\users\leonardo bombardelli\desktop\fcg-trabalhofinal\src\main.cpp
 	<cmath>
+	<ctime>
 	<cstdio>
 	<cstdlib>
 	<iostream>

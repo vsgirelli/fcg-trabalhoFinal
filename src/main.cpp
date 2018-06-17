@@ -16,6 +16,7 @@
 //    #include <cstdio> // Em C++
 //
 #include <cmath>
+#include <ctime>
 #include <cstdio>
 #include <cstdlib>
 
@@ -142,6 +143,16 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 WallModel MakeWallLinedX(float posX, float posY, float posZ, float scaleX, float scaleZ, int objType);  //Wall aligned with X-Z plane.
 WallModel MakeWallLinedY(float posX, float posY, float posZ, float scaleY, float scaleZ, int objType);  //Wall aligned with Y-Z plane.
 WallModel MakeFloor(float posX, float posY, float posZ, float scaleX, float scaleY, int objType);       //Floor, plane aligned with X-Y plane.
+
+// Cube's stuffs
+WallModel MakeCube(float posX, float posY, float posZ);
+void UpdateCube(WallModel &cube, float timeElapsed);
+void DrawCube(WallModel cube);
+
+std::vector<WallModel> sceneCubes;
+const float distBetweenCubes = 3.0f;
+float prevCubeTime = -1;
+
 
 bool CheckCollisionWithWall(glm::vec4 charPos, WallModel wall);
 bool CheckCollisionWithWallYZ(glm::vec4 charPos, WallModel wall);
@@ -329,6 +340,10 @@ int main(int argc, char* argv[])
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
 
+    ObjModel cubemodel("../../data/cube.obj");
+    ComputeNormals(&cubemodel);
+    BuildTrianglesAndAddToVirtualScene(&cubemodel);
+
     if ( argc > 1 )
     {
         ObjModel model(argv[1]);
@@ -352,6 +367,8 @@ int main(int argc, char* argv[])
     glm::mat4 the_model;
     glm::mat4 the_view;
     glm::vec4 multiplicacao;
+
+    srand(time(NULL));
 
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -427,8 +444,7 @@ int main(int argc, char* argv[])
             projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
         }
 
-        glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
-
+        
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
         // efetivamente aplicadas em todos os pontos.
@@ -438,29 +454,15 @@ int main(int argc, char* argv[])
         #define SPHERE 0
         #define BUNNY  1
         #define PLANE  2
+        #define CUBE   3
 
         #define IS_SKY 2
         #define IS_FLOOR 1
         #define IS_WALL 0
 
-        // Desenhamos o modelo da esfera
-        model = Matrix_Translate(-1.0f,0.0f,0.0f)
-              * Matrix_Rotate_Z(0.6f)
-              * Matrix_Rotate_X(0.2f)
-              * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, SPHERE);
-
-        // Desenhamos o modelo do coelho
-        model = Matrix_Translate(1.0f,0.0f,0.0f)
-              * Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, BUNNY);
-
-
         float corridorHeight = 2.0f;
         float corridorWidth = 4.0f;
-        float corridorDepth = 30.0f;
+        float corridorDepth = 40.0f;
         float corridorBegining = 4.0f;
         
         sceneWalls[0] = MakeWallLinedX(0.0f, 0.0f, corridorBegining, corridorWidth, corridorHeight, IS_WALL);                               //Make back wall
@@ -470,6 +472,29 @@ int main(int argc, char* argv[])
         MakeFloor(0.0f, -corridorHeight, -corridorDepth + corridorBegining, corridorWidth, corridorDepth, IS_FLOOR);        // Make the floor
 
         updateCameraPosition(camera_view_vector);
+
+        if(sceneCubes.empty()){
+          float newX = ((rand() % 3) - 1) * 2;
+          WallModel newCube = MakeCube(newX, 0.0f, -(2 * corridorDepth) + 10);
+          sceneCubes.push_back(newCube);  
+        }
+
+        if(sceneCubes.at(sceneCubes.size()-1).posZ > -(2 * corridorDepth) + 20){
+          float newX = ((rand() % 3) - 1) * 2;
+          WallModel newCube = MakeCube(newX, 0.0f, -(2 * corridorDepth) + 10);
+          sceneCubes.push_back(newCube);
+        }
+
+        float curTime = glfwGetTime();
+        float elapsedTime = (prevCubeTime > 0) ? (curTime - prevCubeTime) : -1;
+
+        for(std::vector<WallModel>::iterator it = sceneCubes.begin(); it != sceneCubes.end(); it++){
+          UpdateCube(*it, elapsedTime);
+          DrawCube(*it);
+        }
+
+        prevCubeTime = curTime;
+
 
         // Imprimimos na tela informação sobre o número de quadros renderizados
         // por segundo (frames per second).
@@ -1608,6 +1633,8 @@ void updateCameraPosition(glm::vec4 &camera_view_vector){
           camera_movement = camera_movement + scale(rotated_vector, speed);
         }
       } else{
+        // Decomposes the movement in the z and x axis, and tries to move in each direction
+
         if(key_w_pressed){
           newCameraPositionZ = camera_movement - scale(z_componentfv, speed);
           newCameraPositionX = camera_movement - scale(x_componentfv, speed);
@@ -1739,6 +1766,49 @@ WallModel MakeFloor(float posX, float posY, float posZ, float scaleX, float scal
     modelToReturn.scaleX = scaleX; modelToReturn.scaleY = defaultScaleY; modelToReturn.scaleZ = scaleZ;
 
     return modelToReturn;
+}
+
+WallModel MakeCube(float posX, float posY, float posZ)
+{
+    WallModel model;
+    model.posX = posX;
+    model.posY = posY;
+    model.posZ = posZ;
+    model.scaleX = 1.0f;
+    model.scaleY = 1.0f;
+    model.scaleZ = 1.0f;
+    return model;
+}
+
+#define CUBE_RUNNING_SPEED 15.0
+#define CUBE_MOVING_SPEED 7.5
+#define CUBE_STILL_SPEED 4.0
+
+
+void UpdateCube(WallModel &cube, float timeElapsed)
+{
+    if(timeElapsed > 0){
+      bool player_moving = key_w_pressed || key_s_pressed || key_a_pressed || key_d_pressed;
+      bool player_running = player_moving && key_shift_pressed;
+
+      if(player_running){
+        cube.posZ += CUBE_RUNNING_SPEED * timeElapsed;
+      } else if(player_moving){
+        cube.posZ += CUBE_MOVING_SPEED * timeElapsed;
+      } else{
+        cube.posZ += CUBE_STILL_SPEED * timeElapsed;  
+      }
+
+      std::cout << cube.posZ << std::endl;
+    }
+}
+
+void DrawCube(WallModel cube)
+{
+    glm::mat4 model = Matrix_Translate(cube.posX, cube.posY, cube.posZ);
+    glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+    glUniform1i(object_id_uniform, CUBE);
+    DrawVirtualObject("cube");
 }
 
 bool CheckCollisionWithWall(glm::vec4 charPos, WallModel wall)

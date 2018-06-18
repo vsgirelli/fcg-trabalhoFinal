@@ -1,0 +1,4 @@
+/home/valeria/dev/ufrgs/2018-1/fcg/fcg-trabalhoFinal/src/main.cpp:36:59: fatal error: glad/glad.h: No such file or directory
+ #include <glad/glad.h>   // Cria��o de contexto OpenGL 3.3
+                                                           ^
+compilation terminated.

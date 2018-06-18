@@ -149,7 +149,13 @@ WallModel MakeCube(float posX, float posY, float posZ);
 void UpdateCube(WallModel &cube, float timeElapsed);
 void DrawCube(WallModel cube);
 
+// Tiros
+WallModel MakeTiro(float posX, float posY, float posZ);
+void UpdateTiro(WallModel &tiro, float timeElapsed);
+void DrawTiro(WallModel tiro);
+
 std::vector<WallModel> sceneCubes;
+std::vector<WallModel> sceneTiros;
 const float distBetweenCubes = 3.0f;
 float prevCubeTime = -1;
 
@@ -248,6 +254,7 @@ bool key_a_pressed = false;
 bool key_s_pressed = false;
 bool key_d_pressed = false;
 bool key_shift_pressed = false;
+bool key_space_pressed = false;
 
 glm::vec4 camera_movement = glm::vec4(0.0f, 0.0f, 2.5f, 0.0f);
 
@@ -473,6 +480,7 @@ int main(int argc, char* argv[])
 
         updateCameraPosition(camera_view_vector);
 
+        // Cria novos cubos lançados pela vaca
         if(sceneCubes.empty()){
           float newX = ((rand() % 3) - 1) * 2;
           WallModel newCube = MakeCube(newX, 0.0f, -(2 * corridorDepth) + 10);
@@ -497,8 +505,25 @@ int main(int argc, char* argv[])
           }
         }
 
-        prevCubeTime = curTime;
+        // Adiciona a linha do jogador
+        // Se o usuário pressiona espaço, atirar
+        if (key_space_pressed == true) {
+          WallModel tiro = MakeTiro(camera_position_c.x, camera_position_c.y, camera_position_c.z - 2);
+          sceneTiros.push_back(tiro);
+        }
 
+        for(std::vector<WallModel>::iterator it = sceneTiros.begin(); it != sceneTiros.end(); it++){
+          UpdateTiro(*it, elapsedTime);
+          if(it->posZ <= corridorBegining)
+            DrawTiro(*it);
+          else {
+            sceneCubes.erase(it);
+          }
+        }
+
+        key_space_pressed = false;
+
+        prevCubeTime = curTime;
 
         glm::mat4 model = Matrix_Translate(7.5f, 30.0f, 7.5f) * Matrix_Scale(4.0f, 4.0f, 4.0f);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
@@ -1214,16 +1239,12 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
     }
 
-    // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.
+    // Se o usuário aperta espaço, atira nos cubos
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
     {
-        g_AngleX = 0.0f;
-        g_AngleY = 0.0f;
-        g_AngleZ = 0.0f;
-        g_ForearmAngleX = 0.0f;
-        g_ForearmAngleZ = 0.0f;
-        g_TorsoPositionX = 0.0f;
-        g_TorsoPositionY = 0.0f;
+      if (key_space_pressed == false) {
+        key_space_pressed = true;
+      }
     }
 
     // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
@@ -1794,6 +1815,18 @@ WallModel MakeCube(float posX, float posY, float posZ)
     return model;
 }
 
+WallModel MakeTiro(float posX, float posY, float posZ)
+{
+    WallModel model;
+    model.posX = posX;
+    model.posY = posY;
+    model.posZ = posZ;
+    model.scaleX = 1.0f;
+    model.scaleY = 0.2f;
+    model.scaleZ = 0.2f;
+    return model;
+}
+
 #define CUBE_RUNNING_SPEED 35.0
 #define CUBE_MOVING_SPEED 20.0
 #define CUBE_STILL_SPEED 5.0
@@ -1815,9 +1848,35 @@ void UpdateCube(WallModel &cube, float timeElapsed)
     }
 }
 
+void UpdateTiro(WallModel &tiro, float timeElapsed)
+{
+    if(timeElapsed > 0){
+      bool player_moving = key_w_pressed || key_s_pressed || key_a_pressed || key_d_pressed;
+      bool player_running = player_moving && key_shift_pressed;
+
+      if(player_running){
+        tiro.posZ -= CUBE_RUNNING_SPEED * timeElapsed;
+      } else if(player_moving){
+        tiro.posZ -= CUBE_MOVING_SPEED * timeElapsed;
+      } else{
+        tiro.posZ -= CUBE_STILL_SPEED * timeElapsed;
+      }
+    }
+}
+
 void DrawCube(WallModel cube)
 {
     glm::mat4 model = Matrix_Translate(cube.posX, cube.posY, cube.posZ);
+    glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+    glUniform1i(object_id_uniform, CUBE);
+    DrawVirtualObject("cube");
+}
+
+void DrawTiro(WallModel tiro)
+{
+    glm::mat4 model =
+      Matrix_Translate(tiro.posX, tiro.posY, tiro.posZ)
+    * Matrix_Scale(0.5f, 0.5f, 0.2f);
     glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
     glUniform1i(object_id_uniform, CUBE);
     DrawVirtualObject("cube");

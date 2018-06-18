@@ -157,6 +157,8 @@ float prevCubeTime = -1;
 bool CheckCollisionWithWall(glm::vec4 charPos, WallModel wall);
 bool CheckCollisionWithWallYZ(glm::vec4 charPos, WallModel wall);
 
+void LoseGame();
+
 // To test collision with
 WallModel sceneWalls[4];
 
@@ -490,6 +492,7 @@ int main(int argc, char* argv[])
 
         for(std::vector<WallModel>::iterator it = sceneCubes.begin(); it != sceneCubes.end(); it++){
           UpdateCube(*it, elapsedTime);
+          if(CheckCollisionWithWall(camera_position_c, *it)) LoseGame();
           if(it->posZ <= corridorBegining)
             DrawCube(*it);
           else {
@@ -1803,7 +1806,7 @@ void UpdateCube(WallModel &cube, float timeElapsed)
         cube.posZ += CUBE_STILL_SPEED * timeElapsed;
       }
 
-      std::cout << cube.posZ << std::endl;
+      //std::cout << cube.posZ << std::endl;
     }
 }
 
@@ -1835,6 +1838,11 @@ bool CheckCollisionWithWallYZ(glm::vec4 charPos, WallModel wall)
     if((charPos.z >= wallFirstZ && charPos.z <= wallLastZ) && std::abs(wall.posX - charPos.x) < epsilon)
         return true;
     return false;
+}
+
+void LoseGame()
+{
+    printf("AAAAAAAAAAAAAAAAAAa\n\n\n");
 }
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :

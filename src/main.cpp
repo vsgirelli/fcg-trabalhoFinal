@@ -158,7 +158,7 @@ bool CheckCollisionWithWall(glm::vec4 charPos, WallModel wall);
 bool CheckCollisionWithWallYZ(glm::vec4 charPos, WallModel wall);
 bool CheckBoxCollision(glm::vec4 charPos, WallModel cube);
 
-void LoseGame();
+glm::vec4 LoseGame();
 
 // To test collision with
 WallModel sceneWalls[4];
@@ -241,6 +241,7 @@ GLuint g_NumLoadedTextures = 0;
 
 float depth = 25.0;
 
+GLFWwindow* window;
 
 // Atualiza a posição da camera de acordo com as entradas do usuário
 void updateCameraPosition(glm::vec4 &camera_view_vector);
@@ -278,7 +279,7 @@ int main(int argc, char* argv[])
 
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
-    GLFWwindow* window;
+
     window = glfwCreateWindow(800, 600, "INF01047 - TRABALHO FINAL FCG", NULL, NULL);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     if (!window)
@@ -493,7 +494,11 @@ int main(int argc, char* argv[])
 
         for(std::vector<WallModel>::iterator it = sceneCubes.begin(); it != sceneCubes.end(); it++){
           UpdateCube(*it, elapsedTime);
-          if(CheckBoxCollision(camera_position_c, *it)) LoseGame();
+          if(CheckBoxCollision(camera_position_c, *it))
+          {
+              camera_movement = LoseGame();
+              break;
+          }
           if(it->posZ <= corridorBegining)
             DrawCube(*it);
           else {
@@ -1601,7 +1606,8 @@ void updateCameraPosition(glm::vec4 &camera_view_vector){
 
     if(prevTime > 0){
       glm::vec4 rotated_vector = crossproduct(camera_view_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-      glm::vec4 front_vector = -camera_view_vector;//crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+      glm::vec4 front_vector = -camera_view_vector;
+      crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
 
       glm::vec4 z_componentfv = scale(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), dotproduct(front_vector, glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)));
       glm::vec4 x_componentfv = scale(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), dotproduct(front_vector, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)));
@@ -1863,9 +1869,23 @@ bool CheckBoxCollision(glm::vec4 charPos, WallModel cube)
     return false;
 }
 
-void LoseGame()
+glm::vec4 LoseGame()
 {
-    printf("AAAAAAAAAAAAAAAAAAa\n\n\n");
+    double timeToWait = glfwGetTime();
+    while(glfwGetTime() - timeToWait < 3)
+    {
+        char buffer[80];
+        float padding = TextRendering_LineHeight(window);
+        snprintf(buffer, 80, "SO CLOSE, YET SO FAR");
+        TextRendering_PrintString(window, buffer, -0.7 + padding/5, 0.4f + 2*padding/5, 3.0f);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    sceneCubes.clear();
+    return glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+
 }
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :

@@ -1949,17 +1949,17 @@ bool CheckBoxCollision(glm::vec4 charPos, WallModel cube)
 }
 
 bool CheckCubeCollision(WallModel tiro, WallModel cube) {
-    float cubeFirstX = cube.posX - cube.scaleX; // esq
-    float cubeLastX = cube.posX + cube.scaleX;
-    float cubeFirstZ = cube.posZ - cube.scaleZ;
-    float cubeLastZ = cube.posZ + cube.scaleZ;
+    float cubeFirstX = cube.posX - cube.scaleX/2; // esq
+    float cubeLastX = cube.posX + cube.scaleX/2;
+    float cubeFirstZ = cube.posZ - cube.scaleZ/2;
+    float cubeLastZ = cube.posZ + cube.scaleZ/2;
 
-    float tiroFirstX = tiro.posX - tiro.scaleX; // esq
-    float tiroLastX = tiro.posX + tiro.scaleX; // dir
-    float tiroFirstZ = tiro.posZ - tiro.scaleZ; // frente
-    float tiroLastZ = tiro.posZ + tiro.scaleZ; // costas
+    float tiroFirstX = tiro.posX - tiro.scaleX/2; // esq
+    float tiroLastX = tiro.posX + tiro.scaleX/2; // dir
+    float tiroFirstZ = tiro.posZ - tiro.scaleZ/2; // frente
+    float tiroLastZ = tiro.posZ + tiro.scaleZ/2; // costas
 
-    if (tiroFirstZ <= cubeLastZ && tiroFirstZ <= cubeLastZ) {
+    if (tiroFirstZ <= cubeLastZ && tiroFirstZ <= cubeFirstZ) {
       if (tiroFirstX <= cubeLastX && tiroFirstX >= cubeFirstX)
         return true;
 

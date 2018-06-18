@@ -327,16 +327,16 @@ int main(int argc, char* argv[])
     // Carregamos duas imagens para serem utilizadas como textura
     LoadTextureImage("../../data/large_stone_wall.png");      // TextureImage0
     LoadTextureImage("../../data/floor_grass.png"); // TextureImage1
-    LoadTextureImage("../../data/sky.png");
+    LoadTextureImage("../../data/moon.jpg");
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel spheremodel("../../data/sphere.obj");
     ComputeNormals(&spheremodel);
     BuildTrianglesAndAddToVirtualScene(&spheremodel);
 
-    ObjModel bunnymodel("../../data/bunny.obj");
-    ComputeNormals(&bunnymodel);
-    BuildTrianglesAndAddToVirtualScene(&bunnymodel);
+    ObjModel cowmodel("../../data/cow.obj");
+    ComputeNormals(&cowmodel);
+    BuildTrianglesAndAddToVirtualScene(&cowmodel);
 
     ObjModel planemodel("../../data/plane.obj");
     ComputeNormals(&planemodel);
@@ -383,7 +383,7 @@ int main(int argc, char* argv[])
         // Conversaremos sobre sistemas de cores nas aulas de Modelos de Iluminação.
         //
         //           R     G     B     A
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
 
         // "Pintamos" todos os pixels do framebuffer com a cor definida acima,
         // e também resetamos todos os pixels do Z-buffer (depth buffer).
@@ -454,7 +454,7 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
         #define SPHERE 0
-        #define BUNNY  1
+        #define COW    1
         #define PLANE  2
         #define CUBE   3
 
@@ -502,6 +502,16 @@ int main(int argc, char* argv[])
 
         prevCubeTime = curTime;
 
+
+        glm::mat4 model = Matrix_Translate(7.5f, 30.0f, 7.5f) * Matrix_Scale(4.0f, 4.0f, 4.0f);
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(object_id_uniform, SPHERE);
+        DrawVirtualObject("sphere");
+
+        model = Matrix_Translate(0.0f, -1.0f, -(2 * corridorDepth) + 7) * Matrix_Rotate_Y(-PI/2.0) * Matrix_Scale(1.5, 1.5, 1.5);
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(object_id_uniform, COW);
+        DrawVirtualObject("cow");
 
         // Imprimimos na tela informação sobre o número de quadros renderizados
         // por segundo (frames per second).
@@ -1805,8 +1815,6 @@ void UpdateCube(WallModel &cube, float timeElapsed)
       } else{
         cube.posZ += CUBE_STILL_SPEED * timeElapsed;
       }
-
-      //std::cout << cube.posZ << std::endl;
     }
 }
 

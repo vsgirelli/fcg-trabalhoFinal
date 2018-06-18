@@ -156,6 +156,7 @@ float prevCubeTime = -1;
 
 bool CheckCollisionWithWall(glm::vec4 charPos, WallModel wall);
 bool CheckCollisionWithWallYZ(glm::vec4 charPos, WallModel wall);
+bool CheckBoxCollision(glm::vec4 charPos, WallModel cube);
 
 void LoseGame();
 
@@ -492,7 +493,7 @@ int main(int argc, char* argv[])
 
         for(std::vector<WallModel>::iterator it = sceneCubes.begin(); it != sceneCubes.end(); it++){
           UpdateCube(*it, elapsedTime);
-          if(CheckCollisionWithWall(camera_position_c, *it)) LoseGame();
+          if(CheckBoxCollision(camera_position_c, *it)) LoseGame();
           if(it->posZ <= corridorBegining)
             DrawCube(*it);
           else {
@@ -1844,6 +1845,20 @@ bool CheckCollisionWithWallYZ(glm::vec4 charPos, WallModel wall)
     float epsilon = 0.5;
 
     if((charPos.z >= wallFirstZ && charPos.z <= wallLastZ) && std::abs(wall.posX - charPos.x) < epsilon)
+        return true;
+    return false;
+}
+
+bool CheckBoxCollision(glm::vec4 charPos, WallModel cube)
+{
+    float cubeFirstX = cube.posX - cube.scaleX;
+    float cubeLastX = cube.posX + cube.scaleX;
+    float cubeFirstY = cube.posY - cube.scaleY;
+    float cubeLastY = cube.posY + cube.scaleY;
+    float cubeFirstZ = cube.posZ - cube.scaleZ;
+    float cubeLastZ = cube.posZ + cube.scaleZ;
+
+    if((charPos.x >= cubeFirstX && charPos.x <= cubeLastX) && (charPos.y >= cubeFirstY && charPos.y <= cubeLastY) && (charPos.z >= cubeFirstZ && charPos.z <= cubeLastZ))
         return true;
     return false;
 }

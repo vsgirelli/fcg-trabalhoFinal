@@ -159,6 +159,7 @@ bool CheckCollisionWithWallYZ(glm::vec4 charPos, WallModel wall);
 bool CheckBoxCollision(glm::vec4 charPos, WallModel cube);
 
 glm::vec4 LoseGame();
+glm::vec4 WinGame();
 
 // To test collision with
 WallModel sceneWalls[4];
@@ -476,6 +477,10 @@ int main(int argc, char* argv[])
         MakeFloor(0.0f, -corridorHeight, -corridorDepth + corridorBegining, corridorWidth, corridorDepth, IS_FLOOR);        // Make the floor
 
         updateCameraPosition(camera_view_vector);
+
+        if(camera_movement.z < -(2 * corridorDepth) + 10){
+          camera_movement = WinGame();
+        }
 
         if(sceneCubes.empty()){
           float newX = ((rand() % 3) - 1) * 2;
@@ -1606,8 +1611,7 @@ void updateCameraPosition(glm::vec4 &camera_view_vector){
 
     if(prevTime > 0){
       glm::vec4 rotated_vector = crossproduct(camera_view_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-      glm::vec4 front_vector = -camera_view_vector;
-      crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+      glm::vec4 front_vector = crossproduct(rotated_vector, glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
 
       glm::vec4 z_componentfv = scale(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), dotproduct(front_vector, glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)));
       glm::vec4 x_componentfv = scale(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), dotproduct(front_vector, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)));
@@ -1872,6 +1876,7 @@ bool CheckBoxCollision(glm::vec4 charPos, WallModel cube)
 glm::vec4 LoseGame()
 {
     double timeToWait = glfwGetTime();
+
     while(glfwGetTime() - timeToWait < 3)
     {
         char buffer[80];
@@ -1883,9 +1888,31 @@ glm::vec4 LoseGame()
         glfwPollEvents();
     }
 
-    sceneCubes.clear();
-    return glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    sceneCubes.clear();    
 
+    return glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+}
+
+glm::vec4 WinGame()
+{
+    double timeToWait = glfwGetTime();
+
+    while(glfwGetTime() - timeToWait < 3)
+    {
+        char buffer[80];
+        float padding = TextRendering_LineHeight(window);
+        snprintf(buffer, 80, "YOU WON, CONGRATS");
+        TextRendering_PrintString(window, buffer, -0.7 + padding/5, 0.4f + 2*padding/5, 3.0f);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    sceneCubes.clear();
+    
+    
+
+    return glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 }
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :

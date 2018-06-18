@@ -139,6 +139,8 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 // MADE Fun��es:
+bool CheckCubeCollision(WallModel tiro, WallModel cube);
+
 
 WallModel MakeWallLinedX(float posX, float posY, float posZ, float scaleX, float scaleZ, int objType);  //Wall aligned with X-Z plane.
 WallModel MakeWallLinedY(float posX, float posY, float posZ, float scaleY, float scaleZ, int objType);  //Wall aligned with Y-Z plane.
@@ -517,13 +519,33 @@ int main(int argc, char* argv[])
           sceneTiros.push_back(tiro);
         }
 
-        for(std::vector<WallModel>::iterator it = sceneTiros.begin(); it != sceneTiros.end(); it++){
-          UpdateTiro(*it, elapsedTime);
-          if(it->posZ >= corridorBegining - corridorDepth) {
-            DrawTiro(*it);
+        int i = 0, j=0;
+        // para cada tiro, verifica se tem colisão com algum cubo
+        for(int it = 0; it < sceneTiros.size(); it++){
+          UpdateTiro(sceneTiros[i], elapsedTime);
+          for(int itcube = 0; itcube < sceneCubes.size(); itcube++){
+            if (CheckCubeCollision(sceneTiros[i], sceneCubes[j])) {
+              std::cout << "ROLAAA" << std::endl;
+              sceneCubes.erase(sceneCubes.begin() + j);
+              sceneTiros.erase(sceneTiros.begin() + i);
+              j--;
+              i--;
+            }
+            j++;
+          }
+          i++;
+        }
+
+        i = 0;
+        // para os tiros que sobraram, printa com pos atualizada
+        for(int it = 0; it < sceneTiros.size(); it++){
+          if(sceneTiros[i].posZ >= (corridorBegining - corridorDepth) * 2) {
+            std::cout << sceneTiros[i].posZ << std::endl;
+            DrawTiro(sceneTiros[i]);
+            i++;
           }
           else {
-            sceneTiros.erase(it);
+            sceneTiros.erase(sceneTiros.begin() + i);
           }
         }
 
@@ -1827,7 +1849,7 @@ WallModel MakeTiro(float posX, float posY, float posZ)
     model.posX = posX;
     model.posY = posY;
     model.posZ = posZ;
-    model.scaleX = 1.0f;
+    model.scaleX = 0.2f;
     model.scaleY = 0.2f;
     model.scaleZ = 0.2f;
     return model;
@@ -1882,7 +1904,7 @@ void DrawTiro(WallModel tiro)
 {
     glm::mat4 model =
       Matrix_Translate(tiro.posX, tiro.posY, tiro.posZ)
-    * Matrix_Scale(0.2f, 0.2f, 0.2f);
+    * Matrix_Scale(tiro.scaleX, tiro.scaleY, tiro.scaleZ);
     glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
     glUniform1i(object_id_uniform, TIRO);
     DrawVirtualObject("cube");
@@ -1921,6 +1943,28 @@ bool CheckBoxCollision(glm::vec4 charPos, WallModel cube)
 
     if((charPos.x >= cubeFirstX && charPos.x <= cubeLastX) && (charPos.y >= cubeFirstY && charPos.y <= cubeLastY) && (charPos.z >= cubeFirstZ && charPos.z <= cubeLastZ))
         return true;
+    return false;
+}
+
+bool CheckCubeCollision(WallModel tiro, WallModel cube) {
+    float cubeFirstX = cube.posX - cube.scaleX; // esq
+    float cubeLastX = cube.posX + cube.scaleX;
+    float cubeFirstZ = cube.posZ - cube.scaleZ;
+    float cubeLastZ = cube.posZ + cube.scaleZ;
+
+    float tiroFirstX = tiro.posX - tiro.scaleX; // esq
+    float tiroLastX = tiro.posX + tiro.scaleX; // dir
+    float tiroFirstZ = tiro.posZ - tiro.scaleZ; // frente
+    float tiroLastZ = tiro.posZ + tiro.scaleZ; // costas
+
+    if (tiroFirstZ <= cubeLastZ && tiroFirstZ <= cubeLastZ) {
+      if (tiroFirstX <= cubeLastX && tiroFirstX >= cubeFirstX)
+        return true;
+
+      if (tiroLastX <= cubeLastX && tiroLastX >= cubeFirstX)
+      return true;
+    }
+
     return false;
 }
 

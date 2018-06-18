@@ -529,7 +529,6 @@ int main(int argc, char* argv[])
           UpdateTiro(sceneTiros[i], elapsedTime);
           for(int itcube = 0; itcube < sceneCubes.size(); itcube++){
             if (CheckCubeCollision(sceneTiros[i], sceneCubes[j])) {
-              std::cout << "ROLAAA" << std::endl;
               sceneCubes.erase(sceneCubes.begin() + j);
               sceneTiros.erase(sceneTiros.begin() + i);
               j--;
@@ -544,7 +543,6 @@ int main(int argc, char* argv[])
         // para os tiros que sobraram, printa com pos atualizada
         for(int it = 0; it < sceneTiros.size(); it++){
           if(sceneTiros[i].posZ >= (corridorBegining - corridorDepth) * 2) {
-            std::cout << sceneTiros[i].posZ << std::endl;
             DrawTiro(sceneTiros[i]);
             i++;
           }

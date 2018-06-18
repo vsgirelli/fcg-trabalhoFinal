@@ -508,7 +508,7 @@ int main(int argc, char* argv[])
 
         for(std::vector<WallModel>::iterator it = sceneCubes.begin(); it != sceneCubes.end(); it++){
           UpdateCube(*it, elapsedTime);
-          if(CheckBoxCollision(camera_position_c, *it)) LoseGame();
+          if(CheckBoxCollision(camera_position_c, *it)) camera_movement = LoseGame();
           if(it->posZ <= corridorBegining)
             DrawCube(*it);
           else {

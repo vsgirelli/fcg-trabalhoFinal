@@ -508,7 +508,10 @@ int main(int argc, char* argv[])
 
         for(std::vector<WallModel>::iterator it = sceneCubes.begin(); it != sceneCubes.end(); it++){
           UpdateCube(*it, elapsedTime);
-          if(CheckBoxCollision(camera_position_c, *it)) camera_movement = LoseGame();
+          if(CheckBoxCollision(camera_position_c, *it)) {
+            camera_movement = LoseGame();
+            break;
+          }
           if(it->posZ <= corridorBegining)
             DrawCube(*it);
           else {
@@ -1918,7 +1921,8 @@ bool CheckCollisionWithWall(glm::vec4 charPos, WallModel wall)
     float wallLastX = wall.posX + wall.scaleX;
     float epsilon = 0.5;
 
-    if((charPos.x >= wallFirstX && charPos.x <= wallLastX) && std::abs(wall.posZ - charPos.z) < epsilon)
+    if((charPos.x >= wallFirstX && charPos.x <= wallLastX)
+      && std::abs(wall.posZ - charPos.z) < epsilon)
         return true;
     return false;
 }
@@ -1943,16 +1947,18 @@ bool CheckBoxCollision(glm::vec4 charPos, WallModel cube)
     float cubeFirstZ = cube.posZ - cube.scaleZ;
     float cubeLastZ = cube.posZ + cube.scaleZ;
 
-    if((charPos.x >= cubeFirstX && charPos.x <= cubeLastX) && (charPos.y >= cubeFirstY && charPos.y <= cubeLastY) && (charPos.z >= cubeFirstZ && charPos.z <= cubeLastZ))
+    if((charPos.x >= cubeFirstX && charPos.x <= cubeLastX)
+     && (charPos.y >= cubeFirstY && charPos.y <= cubeLastY)
+     && (charPos.z >= cubeFirstZ && charPos.z <= cubeLastZ))
         return true;
     return false;
 }
 
 bool CheckCubeCollision(WallModel tiro, WallModel cube) {
     float cubeFirstX = cube.posX - cube.scaleX/2; // esq
-    float cubeLastX = cube.posX + cube.scaleX/2;
-    float cubeFirstZ = cube.posZ - cube.scaleZ/2;
-    float cubeLastZ = cube.posZ + cube.scaleZ/2;
+    float cubeLastX = cube.posX + cube.scaleX/2; // dir
+    float cubeFirstZ = cube.posZ - cube.scaleZ/2; // frente
+    float cubeLastZ = cube.posZ + cube.scaleZ/2; // costas
 
     float tiroFirstX = tiro.posX - tiro.scaleX/2; // esq
     float tiroLastX = tiro.posX + tiro.scaleX/2; // dir
@@ -1966,7 +1972,6 @@ bool CheckCubeCollision(WallModel tiro, WallModel cube) {
       if (tiroLastX <= cubeLastX && tiroLastX >= cubeFirstX)
       return true;
     }
-
     return false;
   }
 
@@ -1979,7 +1984,7 @@ bool CheckCubeCollision(WallModel tiro, WallModel cube) {
           char buffer[80];
           float padding = TextRendering_LineHeight(window);
           snprintf(buffer, 80, "SO CLOSE, YET SO FAR");
-          TextRendering_PrintString(window, buffer, -0.7 + padding/5, 0.4f + 2*padding/5, 3.0f);
+          TextRendering_PrintString(window, buffer, -0.7 + padding/2, 0.4f + 2*padding/5, 3.0f);
 
           glfwSwapBuffers(window);
           glfwPollEvents();
@@ -1992,6 +1997,7 @@ bool CheckCubeCollision(WallModel tiro, WallModel cube) {
 
 glm::vec4 WinGame()
 {
+  //std::cout << "OPA" << std::endl;
     double timeToWait = glfwGetTime();
 
     while(glfwGetTime() - timeToWait < 3)
@@ -1999,7 +2005,7 @@ glm::vec4 WinGame()
         char buffer[80];
         float padding = TextRendering_LineHeight(window);
         snprintf(buffer, 80, "YOU WON, CONGRATS");
-        TextRendering_PrintString(window, buffer, -0.7 + padding/5, 0.4f + 2*padding/5, 3.0f);
+        TextRendering_PrintString(window, buffer, -0.7 + padding/2, 0.4f + 2*padding/5, 3.0f);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
